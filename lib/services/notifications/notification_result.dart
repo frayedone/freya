@@ -1,0 +1,1 @@
+enum NotificationResult { scheduled, tooLate, notSupported }
