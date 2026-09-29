@@ -1,0 +1,55 @@
+{
+  "college": "Колледж ЦАТЭК, пр. Достык, 108",
+  "note": "Оценка по типовому интервалу движения. Данных о реальном положении транспорта в Алматы нет.",
+  "serviceStart": 360,
+  "serviceEnd": 1380,
+  "routes": [
+    { "number": "12", "type": "bus", "interval": 7 },
+    { "number": "120", "type": "bus", "interval": 7 },
+    { "number": "45", "type": "bus", "interval": 8 },
+    { "number": "86", "type": "bus", "interval": 8 },
+    { "number": "121", "type": "bus", "interval": 8 },
+    { "number": "т19", "type": "trolley", "interval": 8 },
+    { "number": "т25", "type": "trolley", "interval": 8 },
+    { "number": "2", "type": "bus", "interval": 10 },
+    { "number": "5", "type": "bus", "interval": 10 },
+    { "number": "21", "type": "bus", "interval": 10 },
+    { "number": "99", "type": "bus", "interval": 10 },
+    { "number": "29", "type": "bus", "interval": 12 },
+    { "number": "48", "type": "bus", "interval": 12 },
+    { "number": "95", "type": "bus", "interval": 12 },
+    { "number": "128", "type": "bus", "interval": 12 },
+    { "number": "141", "type": "bus", "interval": 12 },
+    { "number": "107", "type": "bus", "interval": 15 },
+    { "number": "127", "type": "bus", "interval": 15 },
+    { "number": "140", "type": "bus", "interval": 15 },
+    { "number": "м1", "type": "metro", "interval": 5 }
+  ],
+  "stops": [
+    {
+      "name": "Кинотеатр «Арман»",
+      "dist": 128,
+      "routes": ["12", "120", "45", "86", "121", "т19", "т25", "2", "5", "21", "99", "29", "48", "95", "128", "141", "107", "127", "140"]
+    },
+    {
+      "name": "Дворец Республики",
+      "dist": 270,
+      "routes": ["12", "120", "45", "86", "121", "т19", "т25", "2", "5", "21", "99", "29", "48", "95", "128", "141", "107", "127", "140"]
+    },
+    {
+      "name": "Дворец школьников",
+      "dist": 386,
+      "routes": ["12", "120", "45", "86", "121", "т25", "2", "5", "21", "99", "29", "48", "95", "128", "141", "107", "127", "140"]
+    },
+    {
+      "name": "Гостиница «Казахстан»",
+      "dist": 434,
+      "routes": ["12", "120", "45", "86", "121", "т25", "2", "5", "21", "99", "29", "48", "95", "128", "141", "107", "127", "140"]
+    },
+    {
+      "name": "Метро «Абая»",
+      "dist": 748,
+      "routes": ["м1"]
+    }
+  ]
+}
