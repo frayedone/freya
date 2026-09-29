@@ -46,3 +46,6 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# local-only GitHub token
+/lib/services/update_token.dart

@@ -5,6 +5,8 @@ import 'package:flutter/services.dart' show MethodChannel;
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'update_token.dart';
+
 /// Обновление приложения через GitHub Releases.
 ///
 /// Поддерживает как публичный, так и приватный репозиторий.
@@ -55,10 +57,10 @@ class UpdateService {
 
   /// Токен GitHub для приватного репозитория.
   ///
-  /// Создайте PAT (fine-grained, один репозиторий frayedone/freya,
-  /// доступ только на чтение "Contents"), и вставьте сюда.
+  /// Хранится в отдельном файле `lib/services/update_token.dart`,
+  /// который исключён из git (секрет не коммитится).
   /// Пустая строка = репозиторий публичный, токен не нужен.
-  static const String githubToken = '';
+  static const String githubToken = kUpdateGithubToken;
 
   static const MethodChannel _installChannel =
       MethodChannel('kz.freya.freya/updates');
