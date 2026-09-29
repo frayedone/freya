@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <!-- APK скачивается во временную папку приложения -->
-    <cache-path name="apk" path="." />
+    <!--
+      APK обновления может оказаться в любой из внутренних папок приложения
+      в зависимости от того, куда система направила TMPDIR (cache или
+      code_cache). Поэтому разрешаем все внутренние корни, а не только cache.
+    -->
+    <cache-path name="cache" path="." />
+    <code-cache-path name="code_cache" path="." />
+    <files-path name="files" path="." />
+    <external-cache-path name="external_cache" path="." />
 </paths>

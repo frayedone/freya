@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/services.dart' show MethodChannel;
+import 'package:flutter/services.dart'
+    show MethodChannel, MissingPluginException, PlatformException;
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -124,6 +125,7 @@ class UpdateService {
   Future<File> downloadApk(String url, {void Function(double)? onProgress}) async {
     final client = http.Client();
     try {
+      final dir = await _updateDir();
       var uri = Uri.parse(url);
       var authenticated = githubToken.isNotEmpty;
       var received = 0;
@@ -159,7 +161,7 @@ class UpdateService {
 
         total = response.contentLength ?? 0;
         file = File(
-          '${Directory.systemTemp.path}/freya_update_${DateTime.now().millisecondsSinceEpoch}.apk',
+          '${dir.path}/freya_update_${DateTime.now().millisecondsSinceEpoch}.apk',
         );
         sink = file.openWrite();
         try {
@@ -176,6 +178,9 @@ class UpdateService {
         if (total > 0 && received < total) {
           throw UpdateException('Скачивание прервано');
         }
+        if (received == 0) {
+          throw UpdateException('Скачался пустой файл');
+        }
         return file;
       }
       throw UpdateException('Слишком много перенаправлений при скачивании');
@@ -185,6 +190,25 @@ class UpdateService {
     } finally {
       client.close();
     }
+  }
+
+  /// Папка для файлов обновления.
+  ///
+  /// Путь берём у Android: `Directory.systemTemp` на разных устройствах
+  /// указывает то на `cache`, то на `code_cache`, из-за чего установщик
+  /// не мог найти файл через FileProvider.
+  Future<Directory> _updateDir() async {
+    try {
+      final path = await _installChannel.invokeMethod<String>('updateDir');
+      if (path != null && path.isNotEmpty) {
+        return Directory(path);
+      }
+    } on MissingPluginException {
+      // не Android
+    } on PlatformException {
+      // канал недоступен — используем системную временную папку
+    }
+    return Directory.systemTemp;
   }
 
   /// Запускает системный установщик APK (только Android).

@@ -1,5 +1,6 @@
 package kz.freya.freya
 
+import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.FileProvider
@@ -19,9 +20,18 @@ class MainActivity : FlutterActivity() {
                         if (path == null) {
                             result.error("badArg", "path required", null)
                         } else {
-                            installApk(path)
-                            result.success(null)
+                            try {
+                                installApk(path)
+                                result.success(null)
+                            } catch (e: Exception) {
+                                result.error("install", e.message ?: e.toString(), null)
+                            }
                         }
+                    }
+                    "updateDir" -> {
+                        val dir = File(cacheDir, "updates")
+                        if (!dir.exists()) dir.mkdirs()
+                        result.success(dir.absolutePath)
                     }
                     else -> result.notImplemented()
                 }
@@ -29,11 +39,19 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun installApk(path: String) {
-        val uri: Uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", File(path))
+        val file = File(path)
+        if (!file.exists()) {
+            throw IllegalStateException("Файл обновления не найден: $path")
+        }
+        if (file.length() == 0L) {
+            throw IllegalStateException("Файл обновления пустой")
+        }
+        val uri: Uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
         val intent = Intent(Intent.ACTION_VIEW)
             .setDataAndType(uri, "application/vnd.android.package-archive")
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        intent.clipData = ClipData.newRawUri("apk", uri)
         startActivity(intent)
     }
 
