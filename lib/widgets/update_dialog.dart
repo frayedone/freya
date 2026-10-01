@@ -8,6 +8,10 @@ import '../services/update_service.dart';
 import '../theme.dart';
 
 /// Диалоги обновления приложения: подтверждение → скачивание → установка.
+///
+/// Релизные заметки намеренно не показываем: длинный текст не помещался
+/// на экран. Вместо этого — короткое подтверждение и навязчивая кнопка
+/// обновления на главном экране.
 class UpdateDialog {
   UpdateDialog._();
 
@@ -29,17 +33,6 @@ class UpdateDialog {
                 color: context.colors.accent,
               ),
             ),
-            if (update.notes.isNotEmpty) ...[
-              SizedBox(height: 10),
-              Text(
-                update.notes,
-                style: TextStyle(
-                  fontSize: 13,
-                  height: 1.45,
-                  color: context.colors.text,
-                ),
-              ),
-            ],
             SizedBox(height: 10),
             Text(
               'Обновление скачается и установится поверх текущей версии.',
@@ -126,15 +119,25 @@ class _UpdateFlowState extends State<_UpdateFlow> {
     final file = _file;
     if (file == null) return;
     Navigator.of(context).pop();
-    if (_isAndroid) {
-      try {
-        await UpdateService().installApk(file.path);
-      } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(e.toString())));
-      }
+    if (!_isAndroid) return;
+    try {
+      await UpdateService().installApk(file.path);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  Future<void> _openManually() async {
+    try {
+      await UpdateService().openUrl(UpdateService().releasePageUrl);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -168,7 +171,11 @@ class _UpdateFlowState extends State<_UpdateFlow> {
           _FlowState.error => [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text('Позже'),
+                child: Text('Закрыть'),
+              ),
+              TextButton(
+                onPressed: _openManually,
+                child: Text('Скачать вручную'),
               ),
               TextButton(
                 onPressed: _download,
@@ -217,7 +224,7 @@ class _UpdateFlowState extends State<_UpdateFlow> {
         ),
         SizedBox(height: 6),
         Text(
-          'Может понадобиться разрешить установку из неизвестных источников.',
+          'Если установка не запускается — проверь разрешение «Установка из Freya».',
           style: TextStyle(fontSize: 12, color: context.colors.muted),
         ),
       ],

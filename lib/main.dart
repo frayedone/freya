@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'services/notifications/notifications.dart';
 import 'services/settings_service.dart';
+import 'services/update_service.dart';
 import 'theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  UpdateService.init();
   await SettingsService.load();
   await NotificationService.instance.init();
   await NotificationService.instance.refreshDailyAgendas();

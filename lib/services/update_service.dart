@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -65,6 +66,34 @@ class UpdateService {
 
   static const MethodChannel _installChannel =
       MethodChannel('kz.freya.freya/updates');
+
+  static final StreamController<String> _installErrorController =
+      StreamController<String>.broadcast();
+  static bool _handlerSet = false;
+
+  /// Страница релизов — резервный способ скачать APK вручную.
+  String get releasePageUrl =>
+      'https://github.com/$repoOwner/$repoName/releases/latest';
+
+  /// Сообщения об ошибках установки от системы (PackageInstaller).
+  static Stream<String> get installErrors => _installErrorController.stream;
+
+  /// Подписывается на отчёты нативного установщика. Вызвать один раз
+  /// при старте приложения.
+  static void init() {
+    if (_handlerSet) return;
+    _handlerSet = true;
+    _installChannel.setMethodCallHandler((call) async {
+      if (call.method == 'installResult') {
+        final args = call.arguments;
+        final reason = args is Map
+            ? (args['reason'] as String? ?? 'Не удалось установить приложение')
+            : 'Не удалось установить приложение';
+        _installErrorController.add(reason);
+      }
+      return null;
+    });
+  }
 
   /// Возвращает информацию об обновлении, если на GitHub вышел релиз
   /// новее установленной версии. Иначе — null (в т.ч. при ошибке сети
@@ -181,6 +210,12 @@ class UpdateService {
         if (received == 0) {
           throw UpdateException('Скачался пустой файл');
         }
+        if (!await _looksLikeApk(file)) {
+          try {
+            await file.delete();
+          } catch (_) {}
+          throw UpdateException('Скачанный файл повреждён — попробуй ещё раз');
+        }
         return file;
       }
       throw UpdateException('Слишком много перенаправлений при скачивании');
@@ -217,8 +252,51 @@ class UpdateService {
       await _installChannel.invokeMethod<void>('installApk', {
         'path': path,
       });
+    } on PlatformException catch (e) {
+      throw UpdateException(e.message ?? 'Не удалось запустить установку');
     } catch (e) {
       throw UpdateException('Не удалось открыть установщик (${e.toString()})');
+    }
+  }
+
+  /// Разрешена ли установка приложений из Freya (Android 8+).
+  Future<bool> canInstall() async {
+    try {
+      return await _installChannel.invokeMethod<bool>('canInstall') ?? true;
+    } on MissingPluginException {
+      return true;
+    } on PlatformException {
+      return true;
+    }
+  }
+
+  /// Открывает экран «Установка неизвестных приложений» для Freya.
+  Future<void> openInstallSettings() async {
+    try {
+      await _installChannel.invokeMethod<void>('openInstallSettings');
+    } catch (_) {}
+  }
+
+  /// Открывает ссылку во внешнем браузере (для ручной установки).
+  Future<void> openUrl(String url) async {
+    await _installChannel.invokeMethod<void>('openUrl', {'url': url});
+  }
+
+  /// Проверяет, что файл начинается с ZIP-заголовка (`PK\x03\x04`).
+  Future<bool> _looksLikeApk(File file) async {
+    RandomAccessFile? raf;
+    try {
+      raf = await file.open();
+      final header = await raf.read(4);
+      return header.length >= 4 &&
+          header[0] == 0x50 &&
+          header[1] == 0x4B &&
+          header[2] == 0x03 &&
+          header[3] == 0x04;
+    } catch (_) {
+      return false;
+    } finally {
+      await raf?.close();
     }
   }
 
