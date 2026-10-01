@@ -164,8 +164,10 @@ class UpdateService {
 
       for (var hop = 0; hop < 6; hop++) {
         final request = http.Request('GET', uri)..followRedirects = false;
-        request.headers['Accept'] =
-            'application/vnd.github+json, application/octet-stream';
+        // ВАЖНО: только octet-stream. Если добавить application/vnd.github+json,
+        // GitHub отдаёт JSON-метаданные (200 application/json) вместо файла,
+        // и установщик получает «битый» APK.
+        request.headers['Accept'] = 'application/octet-stream';
         if (authenticated) {
           request.headers['Authorization'] = 'Bearer $githubToken';
         }
@@ -186,6 +188,12 @@ class UpdateService {
           await response.stream.drain<void>();
           throw UpdateException(
               'Не удалось скачать обновление (код ${response.statusCode})');
+        }
+
+        final contentType = response.headers['content-type'] ?? '';
+        if (contentType.contains('json')) {
+          await response.stream.drain<void>();
+          throw UpdateException('GitHub вернул не файл обновления — попробуй ещё раз');
         }
 
         total = response.contentLength ?? 0;
