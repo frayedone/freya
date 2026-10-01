@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="avatar_bg_moon">#1B2140</color>
+    <color name="avatar_bg_star">#F2B554</color>
+    <color name="avatar_bg_leaf">#2E7D57</color>
+    <color name="avatar_bg_comet">#6B4FCF</color>
+</resources>

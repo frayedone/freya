@@ -4,9 +4,11 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.ClipData
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInstaller
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -77,6 +79,46 @@ class MainActivity : FlutterActivity() {
                 }
                 else -> result.notImplemented()
             }
+        }
+
+        val iconChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ICON_CHANNEL)
+        iconChannel.setMethodCallHandler { call, result ->
+            when (call.method) {
+                "setAppIcon" -> result.success(setAppIcon(call.argument<String>("key")))
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+    /**
+     * Включает ровно один activity-alias с иконкой. MainActivity при этом
+     * остаётся включённой, чтобы явные интенты (уведомления) не ломались.
+     */
+    private fun setAppIcon(key: String?): Boolean {
+        val names = mapOf(
+            "moon" to "$packageName.IconMoon",
+            "star" to "$packageName.IconStar",
+            "leaf" to "$packageName.IconLeaf",
+            "comet" to "$packageName.IconComet",
+            "freya" to "$packageName.IconFreya",
+        )
+        val target = names[key] ?: names["freya"]!!
+        return try {
+            for (name in names.values) {
+                val state = if (name == target) {
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                } else {
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+                }
+                packageManager.setComponentEnabledSetting(
+                    ComponentName(this, name),
+                    state,
+                    PackageManager.DONT_KILL_APP,
+                )
+            }
+            true
+        } catch (_: Exception) {
+            false
         }
     }
 
@@ -205,6 +247,7 @@ class MainActivity : FlutterActivity() {
 
     companion object {
         private const val CHANNEL = "kz.freya.freya/updates"
+        private const val ICON_CHANNEL = "kz.freya.freya/appicon"
         private const val ACTION_INSTALL_COMMIT = "kz.freya.freya.INSTALL_COMMIT"
 
         /** Ссылка на канал, чтобы принимать отчёт об установке. */

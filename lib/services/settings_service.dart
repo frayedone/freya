@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show ValueNotifier;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../app_avatar.dart';
 import '../theme.dart';
 
 /// Хранилище пользовательских настроек.
@@ -14,10 +15,18 @@ class SettingsService {
   static const String _agendaKey = 'dailyAgendaEnabled';
   static const String _themeKey = 'themeChoice';
   static const String _accentKey = 'accentChoice';
+  static const String _onboardingKey = 'onboardingDone';
+  static const String _avatarKey = 'appAvatar';
 
   /// Изменяется при смене темы/акцента — подписан MaterialApp.
   static final ValueNotifier<({ThemeChoice theme, AccentChoice accent})> appearance =
       ValueNotifier((theme: ThemeChoice.dark, accent: AccentChoice.amber));
+
+  /// Показывать ли онбординг при старте (false — показывать).
+  static final ValueNotifier<bool> onboardingDone = ValueNotifier(true);
+
+  /// Выбранная аватарка/иконка приложения.
+  static final ValueNotifier<AppAvatar> avatar = ValueNotifier(AppAvatar.freya);
 
   static bool _loaded = false;
 
@@ -29,7 +38,22 @@ class SettingsService {
       theme: ThemeChoice.fromName(prefs.getString(_themeKey)),
       accent: AccentChoice.fromName(prefs.getString(_accentKey)),
     );
+    onboardingDone.value = prefs.getBool(_onboardingKey) ?? false;
+    avatar.value = AppAvatar.fromKey(prefs.getString(_avatarKey));
     _loaded = true;
+  }
+
+  /// Отмечает онбординг пройденным (или сбрасывает его для повторного показа).
+  static Future<void> setOnboardingDone(bool done) async {
+    onboardingDone.value = done;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_onboardingKey, done);
+  }
+
+  static Future<void> saveAvatar(AppAvatar choice) async {
+    avatar.value = choice;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_avatarKey, choice.key);
   }
 
   static Future<void> saveTheme(ThemeChoice choice) async {

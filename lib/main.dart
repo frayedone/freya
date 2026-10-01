@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'screens/home_screen.dart';
+import 'screens/onboarding_screen.dart';
+import 'services/app_icon_service.dart';
 import 'services/notifications/notifications.dart';
 import 'services/settings_service.dart';
 import 'services/update_service.dart';
@@ -10,6 +14,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   UpdateService.init();
   await SettingsService.load();
+  unawaited(AppIconService.apply(SettingsService.avatar.value));
   await NotificationService.instance.init();
   await NotificationService.instance.refreshDailyAgendas();
   runApp(const FreyaApp());
@@ -31,7 +36,11 @@ class FreyaApp extends StatelessWidget {
           theme: FreyaTheme.build(brightness: Brightness.light, accent: accent),
           darkTheme: FreyaTheme.build(brightness: Brightness.dark, accent: accent),
           themeMode: theme.mode,
-          home: const HomeScreen(),
+          home: ValueListenableBuilder<bool>(
+            valueListenable: SettingsService.onboardingDone,
+            builder: (context, done, _) =>
+                done ? const HomeScreen() : const OnboardingScreen(),
+          ),
         );
       },
     );

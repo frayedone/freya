@@ -51,5 +51,30 @@
       "dist": 748,
       "routes": ["м1"]
     }
-  ]
+  ],
+  "networkNote": "Демо-сеть остановок для построения маршрута. Координаты и линии приблизительные.",
+  "network": {
+    "stops": [
+      { "id": "kazakhstan", "name": "Гостиница «Казахстан»", "lat": 43.2462, "lng": 76.9569 },
+      { "id": "dostyk_theatre", "name": "Дворец Республики", "lat": 43.2440, "lng": 76.9580 },
+      { "id": "arman", "name": "Кинотеатр «Арман»", "lat": 43.2419, "lng": 76.9584 },
+      { "id": "college", "name": "Колледж ЦАТЭК", "lat": 43.24095, "lng": 76.95743 },
+      { "id": "dostyk_abay", "name": "Достык / Абая", "lat": 43.2405, "lng": 76.9589 },
+      { "id": "koktobe_abay", "name": "Абая / Кок-Тобе", "lat": 43.2402, "lng": 76.9640 },
+      { "id": "abaya_metro", "name": "Метро «Абая»", "lat": 43.2408, "lng": 76.9490 },
+      { "id": "respublika_sq", "name": "Площадь Республики", "lat": 43.2409, "lng": 76.9456 },
+      { "id": "abaya_furmanova", "name": "Абая / Фурманова", "lat": 43.2413, "lng": 76.9390 },
+      { "id": "dos_koktobe", "name": "Достык / Кок-Тобе", "lat": 43.2370, "lng": 76.9670 },
+      { "id": "kok_tobe_base", "name": "Кок-Тобе (канатная дорога)", "lat": 43.2352, "lng": 76.9750 }
+    ],
+    "lines": [
+      { "number": "120", "type": "bus", "interval": 7, "stops": ["kazakhstan", "dostyk_theatre", "arman", "college", "dostyk_abay"] },
+      { "number": "45", "type": "bus", "interval": 8, "stops": ["kazakhstan", "dostyk_theatre", "college", "dostyk_abay", "abaya_metro"] },
+      { "number": "86", "type": "bus", "interval": 8, "stops": ["kazakhstan", "dostyk_theatre", "college", "dostyk_abay", "respublika_sq", "abaya_furmanova"] },
+      { "number": "12", "type": "bus", "interval": 7, "stops": ["college", "arman", "dostyk_abay", "koktobe_abay", "dos_koktobe", "kok_tobe_base"] },
+      { "number": "м1", "type": "metro", "interval": 5, "stops": ["koktobe_abay", "dostyk_abay", "abaya_metro", "respublika_sq", "abaya_furmanova"] },
+      { "number": "т19", "type": "trolley", "interval": 8, "stops": ["dostyk_abay", "abaya_metro", "respublika_sq"] },
+      { "number": "2", "type": "bus", "interval": 10, "stops": ["college", "arman", "dostyk_abay", "abaya_metro", "respublika_sq", "abaya_furmanova"] }
+    ]
+  }
 }

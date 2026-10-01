@@ -4,12 +4,16 @@ import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatf
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 
+import '../app_avatar.dart';
+import '../services/app_icon_service.dart';
 import '../services/notifications/notifications.dart';
 import '../services/schedule_service.dart';
 import '../services/settings_service.dart';
 import '../services/update_service.dart';
 import '../theme.dart';
 import '../widgets/update_dialog.dart';
+import 'onboarding_screen.dart';
+import 'presets_screen.dart';
 import 'schedule_edit_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -26,6 +30,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String? _group;
   ThemeChoice _theme = ThemeChoice.dark;
   AccentChoice _accent = AccentChoice.amber;
+  AppAvatar _avatar = AppAvatar.freya;
   bool _exactAlarms = true;
 
   @override
@@ -49,6 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _group = group;
       _theme = appearance.theme;
       _accent = appearance.accent;
+      _avatar = SettingsService.avatar.value;
       _exactAlarms = exact;
     });
   }
@@ -63,6 +69,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
     HapticFeedback.selectionClick();
     setState(() => _accent = choice);
     await SettingsService.saveAccent(choice);
+  }
+
+  Future<void> _setAvatar(AppAvatar choice) async {
+    HapticFeedback.selectionClick();
+    setState(() => _avatar = choice);
+    await SettingsService.saveAvatar(choice);
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      _showMessage('Иконка «${choice.label}» сохранена');
+      return;
+    }
+    final ok = await AppIconService.apply(choice);
+    if (!mounted) return;
+    _showMessage(
+      ok
+          ? 'Иконка «${choice.label}» установлена — обнови рабочий стол, если не сменилась'
+          : 'Не удалось сменить иконку на этом устройстве',
+    );
+  }
+
+  void _openPresets() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (context) => const PresetsScreen()),
+    );
+  }
+
+  void _replayOnboarding() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const OnboardingScreen(replay: true),
+      ),
+    );
   }
 
   Future<void> _askExactAlarms() async {
@@ -301,6 +338,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: TextStyle(color: context.colors.muted, fontSize: 12),
             ),
           ),
+          SizedBox(height: 16),
+          SectionLabel('Иконка приложения'),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                for (final choice in AppAvatar.values)
+                  _AvatarOption(
+                    avatar: choice,
+                    selected: _avatar == choice,
+                    onTap: () => _setAvatar(choice),
+                  ),
+              ],
+            ),
+          ),
+          SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              '${_avatar.label}: ${_avatar.description}',
+              style: TextStyle(color: context.colors.muted, fontSize: 12),
+            ),
+          ),
           Divider(),
           SectionLabel('Доставка уведомлений'),
           ListTile(
@@ -357,6 +419,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: _openEditor,
           ),
           ListTile(
+            leading: Icon(Icons.bookmarks_outlined, color: context.colors.muted),
+            title: Text('Пресеты расписания', style: TextStyle(fontWeight: FontWeight.w500)),
+            subtitle: Text(
+              'Сохраняй наборы пар и переключайся между ними',
+              style: TextStyle(color: context.colors.muted, fontSize: 12.5),
+            ),
+            trailing: Icon(Icons.chevron_right, color: context.colors.border),
+            onTap: _openPresets,
+          ),
+          ListTile(
+            leading: Icon(Icons.auto_awesome_outlined, color: context.colors.muted),
+            title: Text('Пройти обучение заново', style: TextStyle(fontWeight: FontWeight.w500)),
+            subtitle: Text(
+              'Повторить знакомство с приложением',
+              style: TextStyle(color: context.colors.muted, fontSize: 12.5),
+            ),
+            trailing: Icon(Icons.chevron_right, color: context.colors.border),
+            onTap: _replayOnboarding,
+          ),
+          ListTile(
             leading: Icon(Icons.thermostat_outlined, color: context.colors.muted),
             title: Text('Погода', style: TextStyle(fontWeight: FontWeight.w500)),
             subtitle: Text('Алматы · Open-Meteo', style: TextStyle(color: context.colors.muted, fontSize: 12.5)),
@@ -392,6 +474,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Text(
               'Freya $_version',
               style: TextStyle(fontSize: 11.5, color: context.colors.muted),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AvatarOption extends StatelessWidget {
+  const _AvatarOption({
+    required this.avatar,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final AppAvatar avatar;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: selected ? context.colors.accentSoft : context.colors.card,
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(
+                color: selected ? context.colors.accent : context.colors.border,
+                width: selected ? 2 : 1,
+              ),
+            ),
+            child: Icon(
+              avatar.icon,
+              size: 25,
+              color: selected ? context.colors.accent : context.colors.muted,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            avatar.label,
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w600,
+              color: selected ? context.colors.accent : context.colors.muted,
             ),
           ),
         ],

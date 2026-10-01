@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../models/transit_network.dart';
 import '../models/transport.dart';
 
 /// Оффлайн-оценка времени прибытия транспорта у колледжа.
@@ -40,6 +41,37 @@ class TransportService {
         serviceStart: 360,
         serviceEnd: 1380,
         stops: [],
+      );
+    }
+  }
+
+  /// Загружает демо-сеть остановок и линий для построения маршрута.
+  Future<TransitNetwork> loadNetwork() async {
+    try {
+      final raw = await rootBundle.loadString(assetPath);
+      final json = jsonDecode(raw) as Map<String, dynamic>;
+      final network = json['network'] as Map<String, dynamic>? ?? const {};
+      return TransitNetwork(
+        stops: (network['stops'] as List? ?? const [])
+            .map((item) => NetStop.fromJson(item as Map<String, dynamic>))
+            .toList(),
+        lines: (network['lines'] as List? ?? const [])
+            .map((item) => TransitLine.fromJson(item as Map<String, dynamic>))
+            .toList(),
+        serviceStart: (json['serviceStart'] as num?)?.toInt() ?? 360,
+        serviceEnd: (json['serviceEnd'] as num?)?.toInt() ?? 1380,
+        note: network['note'] as String? ??
+            json['networkNote'] as String? ??
+            json['note'] as String? ??
+            '',
+      );
+    } catch (_) {
+      return const TransitNetwork(
+        stops: [],
+        lines: [],
+        serviceStart: 360,
+        serviceEnd: 1380,
+        note: '',
       );
     }
   }
