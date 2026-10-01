@@ -1,8 +1,11 @@
 package kz.freya.freya
 
+import android.app.AlarmManager
 import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -33,9 +36,47 @@ class MainActivity : FlutterActivity() {
                         if (!dir.exists()) dir.mkdirs()
                         result.success(dir.absolutePath)
                     }
+                    "canScheduleExactAlarms" -> result.success(canExactAlarms())
+                    "requestExactAlarms" -> {
+                        requestExactAlarms()
+                        result.success(canExactAlarms())
+                    }
+                    "openBatterySettings" -> {
+                        try {
+                            startActivity(
+                                Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
+                            result.success(null)
+                        } catch (e: Exception) {
+                            result.error("battery", e.message ?: e.toString(), null)
+                        }
+                    }
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    private fun canExactAlarms(): Boolean {
+        val am = getSystemService(ALARM_SERVICE) as? AlarmManager ?: return false
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            am.canScheduleExactAlarms()
+        } else {
+            true
+        }
+    }
+
+    private fun requestExactAlarms() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        try {
+            startActivity(
+                Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                    .setData(Uri.parse("package:$packageName"))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        } catch (_: Exception) {
+            // на части прошивок экрана нет — просто пропускаем
+        }
     }
 
     private fun installApk(path: String) {

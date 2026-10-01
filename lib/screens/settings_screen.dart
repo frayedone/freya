@@ -10,6 +10,7 @@ import '../services/settings_service.dart';
 import '../services/update_service.dart';
 import '../theme.dart';
 import '../widgets/update_dialog.dart';
+import 'schedule_edit_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -19,10 +20,13 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  static const String _version = '1.0.0';
+  static final String _version = '1.0.0';
 
   bool _agendaEnabled = false;
   String? _group;
+  ThemeChoice _theme = ThemeChoice.dark;
+  AccentChoice _accent = AccentChoice.amber;
+  bool _exactAlarms = true;
 
   @override
   void initState() {
@@ -34,20 +38,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final agenda = await SettingsService.loadAgendaEnabled();
     String? group;
     try {
-      final schedule = await const ScheduleService().load();
+      final schedule = await ScheduleService().load();
       group = schedule.group;
     } catch (_) {}
+    final appearance = SettingsService.appearance.value;
+    final exact = await NotificationService.instance.canScheduleExact();
     if (!mounted) return;
     setState(() {
       _agendaEnabled = agenda;
       _group = group;
+      _theme = appearance.theme;
+      _accent = appearance.accent;
+      _exactAlarms = exact;
     });
+  }
+
+  Future<void> _setTheme(ThemeChoice choice) async {
+    HapticFeedback.selectionClick();
+    setState(() => _theme = choice);
+    await SettingsService.saveTheme(choice);
+  }
+
+  Future<void> _setAccent(AccentChoice choice) async {
+    HapticFeedback.selectionClick();
+    setState(() => _accent = choice);
+    await SettingsService.saveAccent(choice);
+  }
+
+  Future<void> _askExactAlarms() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      _showMessage('Доступно только на Android');
+      return;
+    }
+    final granted = await NotificationService.instance.requestExactAlarms();
+    final ok = await NotificationService.instance.canScheduleExact();
+    if (!mounted) return;
+    setState(() => _exactAlarms = ok);
+    _showMessage(granted || ok
+        ? 'Точные будильники включены — уведомления будут приходить вовремя'
+        : 'Разрешение не выдано — система может задерживать уведомления');
+  }
+
+  Future<void> _testNotification() async {
+    final ok = await NotificationService.instance.sendTestNotification();
+    if (!mounted) return;
+    _showMessage(ok
+        ? 'Проверочное уведомление придёт через 15 секунд'
+        : 'Не удалось поставить уведомление — проверь разрешения');
+  }
+
+  void _openEditor() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (context) => const ScheduleEditScreen()),
+    );
   }
 
   Future<void> _toggleAgenda(bool value) async {
     HapticFeedback.selectionClick();
     if (value) {
-      final schedule = await const ScheduleService().load();
+      final schedule = await ScheduleService().load();
       final skipped = await SettingsService.loadSkippedWeekdays();
       final ok = await NotificationService.instance
           .enableDailyAgenda(schedule, skipped);
@@ -69,28 +118,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _reset() async {
-    final confirmed = await showDialog<bool>(
+  Future<void> _reset() async {    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Сбросить настройки?'),
-        content: const Text(
+        title: Text('Сбросить настройки?'),
+        content: Text(
           'Будут удалены отменённые дни и все напоминания. Само расписание не изменится.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Отмена'),
+            child: Text('Отмена'),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Сбросить', style: TextStyle(color: kDanger)),
+            child: Text('Сбросить', style: TextStyle(color: context.colors.danger)),
           ),
         ],
       ),
     );
     if (confirmed != true || !mounted) return;
     await SettingsService.saveSkippedWeekdays(<int>{});
+    await NotificationService.instance.disableDailyAgenda();
     await SettingsService.saveAgendaEnabled(false);
     await NotificationService.instance.cancelAll();
     if (!mounted) return;
@@ -98,20 +147,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _showMessage('Настройки сброшены');
   }
 
-  void _showAbout() {
-    showDialog<void>(
+  void _showAbout() {    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Freya'),
+        title: Text('Freya'),
         content: Text(
           'Персональное расписание колледжа и погода. Все данные хранятся '
           'локально на устройстве.\n\nВерсия $_version',
-          style: const TextStyle(height: 1.4),
+          style: TextStyle(height: 1.4),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Понятно'),
+            child: Text('Понятно'),
           ),
         ],
       ),
@@ -122,8 +170,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Как работают уведомления'),
-        content: const Text(
+        title: Text('Как работают уведомления'),
+        content: Text(
           'Утреннее расписание приходит каждый день в 9:00, пропуская выходные '
           'и отменённые дни.\n\n'
           'Напоминание о конкретной паре включается колокольчиком на её карточке '
@@ -134,7 +182,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Понятно'),
+            child: Text('Понятно'),
           ),
         ],
       ),
@@ -157,7 +205,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
     setState(() => _checkForUpdatesBusy = true);
     try {
-      final update = await const UpdateService().checkForUpdate();
+      final update = await UpdateService().checkForUpdate();
       if (!mounted) return;
       if (update == null) {
         _showMessage('Установлена актуальная версия');
@@ -172,81 +220,178 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Настройки')),
+      appBar: AppBar(title: Text('Настройки')),
       body: ListView(
-        padding: const EdgeInsets.only(bottom: 24),
+        padding: EdgeInsets.only(bottom: 24),
         children: [
-          const SectionLabel('Уведомления'),
+          SectionLabel('Уведомления'),
           SwitchListTile(
-            activeThumbColor: kAccent,
-            activeTrackColor: kAccentSoft,
-            title: const Text('Утреннее расписание в 9:00', style: TextStyle(fontWeight: FontWeight.w700)),
-            subtitle: const Text('Список пар на день каждое утро', style: TextStyle(color: kMuted, fontSize: 12.5)),
+            activeThumbColor: context.colors.accent,
+            activeTrackColor: context.colors.accentSoft,
+            title: Text('Утреннее расписание в 9:00', style: TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: Text('Список пар на день каждое утро', style: TextStyle(color: context.colors.muted, fontSize: 12.5)),
             value: _agendaEnabled,
             onChanged: _toggleAgenda,
           ),
-          const ListTile(
-            leading: Icon(Icons.alarm_add_outlined, color: kMuted),
+          ListTile(
+            leading: Icon(Icons.alarm_add_outlined, color: context.colors.muted),
             title: Text('Напоминания о парах', style: TextStyle(fontWeight: FontWeight.w500)),
             subtitle: Text(
               'Включаются колокольчиком на карточке занятия — за 10 минут до пары',
-              style: TextStyle(color: kMuted, fontSize: 12.5),
+              style: TextStyle(color: context.colors.muted, fontSize: 12.5),
             ),
           ),
-          const Divider(),
-          const SectionLabel('Приложение'),
+          Divider(),
+          SectionLabel('Оформление'),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: SegmentedButton<ThemeChoice>(
+              segments: [
+                for (final choice in ThemeChoice.values)
+                  ButtonSegment(
+                    value: choice,
+                    label: Text(
+                      choice.label,
+                      style: TextStyle(fontSize: 12.5),
+                    ),
+                  ),
+              ],
+              selected: {_theme},
+              showSelectedIcon: false,
+              onSelectionChanged: (values) => _setTheme(values.first),
+            ),
+          ),
+          SizedBox(height: 14),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                for (final choice in AccentChoice.values)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: GestureDetector(
+                      onTap: () => _setAccent(choice),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: choice.color,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: _accent == choice
+                                ? context.colors.text
+                                : Colors.transparent,
+                            width: 2.5,
+                          ),
+                        ),
+                        child: _accent == choice
+                            ? Icon(Icons.check, size: 17, color: Colors.white)
+                            : null,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              'Цвет акцента: ${_accent.label}',
+              style: TextStyle(color: context.colors.muted, fontSize: 12),
+            ),
+          ),
+          Divider(),
+          SectionLabel('Доставка уведомлений'),
           ListTile(
-            leading: const Icon(Icons.info_outline, color: kMuted),
-            title: const Text('О приложении', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: Text('Freya · версия $_version', style: const TextStyle(color: kMuted, fontSize: 12.5)),
-            trailing: const Icon(Icons.chevron_right, color: kBorder),
+            leading: Icon(
+              _exactAlarms ? Icons.verified_outlined : Icons.warning_amber_outlined,
+              color: _exactAlarms ? context.colors.accent : context.colors.danger,
+            ),
+            title: Text('Точное время', style: TextStyle(fontWeight: FontWeight.w500)),
+            subtitle: Text(
+              _exactAlarms
+                  ? 'Уведомления приходят вовремя, даже когда приложение закрыто'
+                  : 'Без этого система задерживает уведомления на десятки минут',
+              style: TextStyle(color: context.colors.muted, fontSize: 12.5),
+            ),
+            trailing: _exactAlarms
+                ? null
+                : Icon(Icons.chevron_right, color: context.colors.border),
+            onTap: _exactAlarms ? null : _askExactAlarms,
+          ),
+          ListTile(
+            leading: Icon(Icons.notifications_active_outlined, color: context.colors.muted),
+            title: Text('Проверить уведомление', style: TextStyle(fontWeight: FontWeight.w500)),
+            subtitle: Text('Придёт через 15 секунд', style: TextStyle(color: context.colors.muted, fontSize: 12.5)),
+            trailing: Icon(Icons.chevron_right, color: context.colors.border),
+            onTap: _testNotification,
+          ),
+          ListTile(
+            leading: Icon(Icons.battery_saver_outlined, color: context.colors.muted),
+            title: Text('Экономия батареи', style: TextStyle(fontWeight: FontWeight.w500)),
+            subtitle: Text(
+              'Отключите оптимизацию для Freya, иначе Xiaomi и Samsung сносят отложенные уведомления',
+              style: TextStyle(color: context.colors.muted, fontSize: 12.5),
+            ),
+            trailing: Icon(Icons.chevron_right, color: context.colors.border),
+            onTap: () => NotificationService.instance.openBatterySettings(),
+          ),
+          Divider(),
+          SectionLabel('Приложение'),
+          ListTile(
+            leading: Icon(Icons.info_outline, color: context.colors.muted),
+            title: Text('О приложении', style: TextStyle(fontWeight: FontWeight.w500)),
+            subtitle: Text('Freya · версия $_version', style: TextStyle(color: context.colors.muted, fontSize: 12.5)),
+            trailing: Icon(Icons.chevron_right, color: context.colors.border),
             onTap: _showAbout,
           ),
           ListTile(
-            leading: const Icon(Icons.school_outlined, color: kMuted),
-            title: const Text('Моя группа', style: TextStyle(fontWeight: FontWeight.w500)),
+            leading: Icon(Icons.school_outlined, color: context.colors.muted),
+            title: Text('Моё расписание и группа', style: TextStyle(fontWeight: FontWeight.w500)),
             subtitle: Text(
               _group ?? 'Загрузка…',
-              style: const TextStyle(color: kMuted, fontSize: 12.5),
+              style: TextStyle(color: context.colors.muted, fontSize: 12.5),
             ),
-            onTap: () => _showMessage('Группа ${_group ?? ''}закреплена в расписании'),
+            trailing: Icon(Icons.chevron_right, color: context.colors.border),
+            onTap: _openEditor,
           ),
           ListTile(
-            leading: const Icon(Icons.thermostat_outlined, color: kMuted),
-            title: const Text('Погода', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: const Text('Алматы · Open-Meteo', style: TextStyle(color: kMuted, fontSize: 12.5)),
+            leading: Icon(Icons.thermostat_outlined, color: context.colors.muted),
+            title: Text('Погода', style: TextStyle(fontWeight: FontWeight.w500)),
+            subtitle: Text('Алматы · Open-Meteo', style: TextStyle(color: context.colors.muted, fontSize: 12.5)),
             onTap: () => _showMessage('Погода обновляется при открытии вкладки'),
           ),
           ListTile(
-            leading: const Icon(Icons.help_outline, color: kMuted),
-            title: const Text('Как включить уведомления', style: TextStyle(fontWeight: FontWeight.w500)),
-            trailing: const Icon(Icons.chevron_right, color: kBorder),
+            leading: Icon(Icons.help_outline, color: context.colors.muted),
+            title: Text('Как включить уведомления', style: TextStyle(fontWeight: FontWeight.w500)),
+            trailing: Icon(Icons.chevron_right, color: context.colors.border),
             onTap: _showNotificationsHelp,
           ),
           ListTile(
-            leading: const Icon(Icons.system_update_alt_outlined, color: kMuted),
-            title: const Text('Проверить обновления', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: const Text('Новая версия: скачать и установить', style: TextStyle(color: kMuted, fontSize: 12.5)),
+            leading: Icon(Icons.system_update_alt_outlined, color: context.colors.muted),
+            title: Text('Проверить обновления', style: TextStyle(fontWeight: FontWeight.w500)),
+            subtitle: Text('Новая версия: скачать и установить', style: TextStyle(color: context.colors.muted, fontSize: 12.5)),
             trailing: _checkForUpdatesBusy
-                ? const SizedBox(
+                ? SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: kAccent),
+                    child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.accent),
                   )
-                : const Icon(Icons.chevron_right, color: kBorder),
+                : Icon(Icons.chevron_right, color: context.colors.border),
             onTap: _checkForUpdates,
           ),
-          const Divider(),
+          Divider(),
           ListTile(
-            leading: const Icon(Icons.delete_outline, color: kDanger),
-            title: const Text('Сбросить настройки', style: TextStyle(fontWeight: FontWeight.w500, color: kDanger)),
+            leading: Icon(Icons.delete_outline, color: context.colors.danger),
+            title: Text('Сбросить настройки', style: TextStyle(fontWeight: FontWeight.w500, color: context.colors.danger)),
             onTap: _reset,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Center(
             child: Text(
               'Freya $_version',
-              style: const TextStyle(fontSize: 11.5, color: kMuted),
+              style: TextStyle(fontSize: 11.5, color: context.colors.muted),
             ),
           ),
         ],

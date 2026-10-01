@@ -16,46 +16,46 @@ class UpdateDialog {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Доступна новая версия'),
+        title: Text('Доступна новая версия'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Freya ${update.versionName}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
-                color: kAccent,
+                color: context.colors.accent,
               ),
             ),
             if (update.notes.isNotEmpty) ...[
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Text(
                 update.notes,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   height: 1.45,
-                  color: kText,
+                  color: context.colors.text,
                 ),
               ),
             ],
-            const SizedBox(height: 10),
-            const Text(
+            SizedBox(height: 10),
+            Text(
               'Обновление скачается и установится поверх текущей версии.',
-              style: TextStyle(fontSize: 12, color: kMuted),
+              style: TextStyle(fontSize: 12, color: context.colors.muted),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Позже'),
+            child: Text('Позже'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: kAccent, foregroundColor: kBg),
+            style: FilledButton.styleFrom(backgroundColor: context.colors.accent, foregroundColor: context.colors.bg),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Обновить'),
+            child: Text('Обновить'),
           ),
         ],
       ),
@@ -143,7 +143,7 @@ class _UpdateFlowState extends State<_UpdateFlow> {
     return PopScope(
       canPop: _state != _FlowState.downloading,
       child: AlertDialog(
-        title: const Text('Обновление'),
+        title: Text('Обновление'),
         content: switch (_state) {
           _FlowState.downloading => _buildDownloading(),
           _FlowState.ready => _buildReady(),
@@ -154,25 +154,25 @@ class _UpdateFlowState extends State<_UpdateFlow> {
           _FlowState.ready => [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Позже'),
+                child: Text('Позже'),
               ),
               FilledButton(
                 style: FilledButton.styleFrom(
-                  backgroundColor: kAccent,
-                  foregroundColor: kBg,
+                  backgroundColor: context.colors.accent,
+                  foregroundColor: context.colors.bg,
                 ),
                 onPressed: _isAndroid ? _install : null,
-                child: const Text('Установить'),
+                child: Text('Установить'),
               ),
             ],
           _FlowState.error => [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Позже'),
+                child: Text('Позже'),
               ),
               TextButton(
                 onPressed: _download,
-                child: const Text('Повторить'),
+                child: Text('Повторить'),
               ),
             ],
         },
@@ -185,40 +185,40 @@ class _UpdateFlowState extends State<_UpdateFlow> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Скачивание новой версии…',
-          style: TextStyle(fontSize: 13, color: kText),
+          style: TextStyle(fontSize: 13, color: context.colors.text),
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: 14),
         LinearProgressIndicator(
           value: _progress > 0 ? _progress : null,
-          color: kAccent,
-          backgroundColor: kAccentSoft,
+          color: context.colors.accent,
+          backgroundColor: context.colors.accentSoft,
           minHeight: 5,
           borderRadius: BorderRadius.circular(4),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Text(
           _progress > 0 ? '${(_progress * 100).round()}%' : 'Подключение…',
-          style: const TextStyle(fontSize: 11.5, color: kMuted),
+          style: TextStyle(fontSize: 11.5, color: context.colors.muted),
         ),
       ],
     );
   }
 
   Widget _buildReady() {
-    return const Column(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Готово. Нажми «Установить», чтобы запустить системный установщик.',
-          style: TextStyle(fontSize: 13, height: 1.45, color: kText),
+          style: TextStyle(fontSize: 13, height: 1.45, color: context.colors.text),
         ),
         SizedBox(height: 6),
         Text(
           'Может понадобиться разрешить установку из неизвестных источников.',
-          style: TextStyle(fontSize: 12, color: kMuted),
+          style: TextStyle(fontSize: 12, color: context.colors.muted),
         ),
       ],
     );
@@ -231,13 +231,13 @@ class _UpdateFlowState extends State<_UpdateFlow> {
       children: [
         Icon(
           _isAndroid ? Icons.cloud_off_outlined : Icons.error_outline,
-          color: kDanger,
+          color: context.colors.danger,
           size: 22,
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Text(
           _error ?? 'Неизвестная ошибка',
-          style: const TextStyle(fontSize: 12.5, height: 1.4, color: kText),
+          style: TextStyle(fontSize: 12.5, height: 1.4, color: context.colors.text),
         ),
       ],
     );

@@ -7,6 +7,18 @@ class WeekSchedule {
   final String group;
   final Map<int, List<Lesson>> days;
 
+  WeekSchedule copyWith({String? group, Map<int, List<Lesson>>? days}) =>
+      WeekSchedule(group: group ?? this.group, days: days ?? this.days);
+
+  /// Замена списка пар конкретного дня (с сортировкой по времени начала).
+  WeekSchedule withDay(int weekday, List<Lesson> lessons) {
+    final next = Map<int, List<Lesson>>.from(days);
+    final sorted = List<Lesson>.from(lessons)
+      ..sort((a, b) => a.start.compareTo(b.start));
+    next[weekday] = sorted;
+    return copyWith(days: next);
+  }
+
   static const List<String> weekdayShort = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
   String weekdayName(int weekday) => weekdayShort[weekday - 1];

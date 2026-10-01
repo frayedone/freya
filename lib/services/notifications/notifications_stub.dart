@@ -19,6 +19,14 @@ class NotificationService {
 
   Future<void> refreshDailyAgendas() async {}
 
+  Future<bool> canScheduleExact() async => false;
+
+  Future<bool> requestExactAlarms() async => false;
+
+  Future<void> openBatterySettings() async {}
+
+  Future<bool> sendTestNotification() async => false;
+
   Future<NotificationResult> schedulePreLesson({
     required Lesson lesson,
     required DateTime onDate,

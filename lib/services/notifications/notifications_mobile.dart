@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -21,8 +22,20 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
   bool _ready = false;
 
+  static const MethodChannel _channel = MethodChannel('kz.freya.freya/updates');
+
+  /// Разрешение на точные будильники; пересчитывается при планировании.
+  static bool _exactAllowed = false;
+
   static const int _agendaIdBase = 300;
   static const int _preLessonIdBase = 1000;
+
+  /// id одноразовых уведомлений расписания: _agendaIdBase + смещение дня.
+  static const int _agendaDays = 7;
+  static const int _testId = 9999;
+
+  /// id из прошлой версии (повторяющиеся будильники) — гасим при перепланировании.
+  static const int _legacyAgendaIdBase = 400;
 
   /// Стабильный id напоминания о паре: уникален для пары «дата + номер урока».
   static int preLessonIdFor(DateTime day, int lessonIndex) =>
@@ -63,7 +76,7 @@ class NotificationService {
     return true;
   }
 
-  /// Включить утренние уведомления: каждый день в 09:00 — расписание на день.
+  /// Включить утренние уведомления: расписание на день.
   /// Для отменённых дней (в [skippedWeekdays]) уведомление не создаётся.
   Future<bool> enableDailyAgenda(WeekSchedule schedule, Set<int> skippedWeekdays) async {
     if (!_ready) return false;
@@ -85,17 +98,99 @@ class NotificationService {
     } catch (_) {}
   }
 
+  /// Есть ли разрешение на точные будильники (Android 12+).
+  ///
+  /// Без него `exactAllowWhileIdle` недоступен, а повторяющиеся будильники
+  /// Android батчит в общее окно — уведомления приходят с большой задержкой.
+  Future<bool> canScheduleExact() async {
+    if (!_ready || kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      return false;
+    }
+    try {
+      return await _channel.invokeMethod<bool>('canScheduleExactAlarms') ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Открыть системный экран выдачи разрешения на точные будильники.
+  Future<bool> requestExactAlarms() async {
+    if (!_ready) return false;
+    try {
+      return await _channel.invokeMethod<bool>('requestExactAlarms') ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Открыть настройки оптимизации батареи: без исключения агрессивные
+  /// OEM-прошивки (Xiaomi, Samsung, Huawei) сносят отложенные уведомления.
+  Future<void> openBatterySettings() async {
+    if (!_ready) return;
+    try {
+      await _channel.invokeMethod<void>('openBatterySettings');
+    } catch (_) {}
+  }
+
+  /// Проверка: поставить уведомление через 15 секунд, чтобы убедиться, что
+  /// канал и разрешения работают, не дожидаясь утра.
+  Future<bool> sendTestNotification() async {
+    if (!_ready) return false;
+    try {
+      if (!await _requestPermission()) return false;
+      const details = NotificationDetails(
+        android: AndroidNotificationDetails(
+          'agenda',
+          'Расписание на день',
+          channelDescription: 'Утреннее расписание занятий на сегодня',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+      );
+      await _plugin.zonedSchedule(
+        id: _testId,
+        title: 'Проверка уведомлений',
+        body: 'Если вы это видите — уведомления работают.',
+        scheduledDate: tz.TZDateTime.now(tz.local)
+            .add(const Duration(seconds: 15)),
+        notificationDetails: details,
+        androidScheduleMode: _scheduleMode(),
+        payload: NotificationRouter.openSchedulePayload,
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Выключить утренние уведомления и убрать все отложенные будильники.
   Future<void> disableDailyAgenda() => _cancelAgendas();
 
+  /// Режим планирования: точный, если разрешение выдано, иначе неточный.
+  ///
+  /// `matchDateTimeComponents` намеренно не используется: повторяющийся
+  /// будильник Android ставит через `AlarmManager.setRepeating()`, который
+  /// батчится в maintenance-окно и приходит с задержкой до часа. Поэтому
+  /// вместо повтора ставим отдельные одноразовые будильники.
+  AndroidScheduleMode _scheduleMode() =>
+      _exactAllowed ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle;
+
+  /// Отменить все будильники расписания (по id из [_agendaIdBase]).
   Future<void> _cancelAgendas() async {
     if (!_ready) return;
     for (var weekday = 1; weekday <= 7; weekday++) {
       await _plugin.cancel(id: _agendaIdBase + weekday);
     }
+    // id повторных уведомлений из прошлых версий
+    for (var weekday = 1; weekday <= 7; weekday++) {
+      await _plugin.cancel(id: _legacyAgendaIdBase + weekday);
+    }
+    await _plugin.cancel(id: _testId);
   }
 
   Future<void> _scheduleAgendas(WeekSchedule schedule, Set<int> skippedWeekdays) async {
     if (!_ready) return;
+    _exactAllowed = await canScheduleExact();
     await _cancelAgendas();
     const androidDetails = AndroidNotificationDetails(
       'agenda',
@@ -108,26 +203,30 @@ class NotificationService {
     const details =
         NotificationDetails(android: androidDetails, iOS: DarwinNotificationDetails());
 
+    // Погода осмысленна только в ближайших днях.
     final weatherLine = await _todayWeatherLine();
     final now = DateTime.now();
-    for (var weekday = 1; weekday <= 7; weekday++) {
+    for (var dayOffset = 0; dayOffset < _agendaDays; dayOffset++) {
+      final date = DateTime(now.year, now.month, now.day + dayOffset);
+      final weekday = date.weekday;
       if (skippedWeekdays.contains(weekday)) continue;
       final lessons = schedule.days[weekday] ?? const <Lesson>[];
       final body = [
-        weatherLine,
+        if (dayOffset <= 1 && weatherLine.isNotEmpty) weatherLine,
         if (lessons.isEmpty) 'Сегодня пар нет'
         else ...lessons.map((lesson) => '${lesson.start} · ${lesson.subject}'),
       ].where((line) => line.isNotEmpty).join('\n');
-      final fireAt = _nextWeekdayAt(weekday, 9, 0, from: now);
+
+      final fireAt = DateTime(date.year, date.month, date.day, 9, 0);
+      if (!fireAt.isAfter(now)) continue;
       try {
         await _plugin.zonedSchedule(
-          id: _agendaIdBase + weekday,
+          id: _agendaIdBase + dayOffset,
           title: 'Расписание на сегодня',
           body: body,
           scheduledDate: tz.TZDateTime.from(fireAt, tz.local),
           notificationDetails: details,
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+          androidScheduleMode: _scheduleMode(),
           payload: NotificationRouter.openSchedulePayload,
         );
       } catch (_) {
@@ -144,13 +243,6 @@ class NotificationService {
     } catch (_) {
       return '';
     }
-  }
-
-  DateTime _nextWeekdayAt(int weekday, int hour, int minute, {required DateTime from}) {
-    final delta = (weekday - from.weekday + 7) % 7;
-    var fireAt = DateTime(from.year, from.month, from.day, hour, minute).add(Duration(days: delta));
-    if (!fireAt.isAfter(from)) fireAt = fireAt.add(const Duration(days: 7));
-    return fireAt;
   }
 
   /// Напомнить о паре за `minutesBefore` минут до её начала.
@@ -194,7 +286,7 @@ class NotificationService {
           body: body,
           scheduledDate: tz.TZDateTime.from(fireAt, tz.local),
           notificationDetails: details,
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          androidScheduleMode: _scheduleMode(),
           payload: NotificationRouter.openSchedulePayload,
         );
         return NotificationResult.scheduled;

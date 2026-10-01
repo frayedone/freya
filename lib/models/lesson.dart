@@ -19,6 +19,23 @@ class Lesson {
   /// Время окончания пары в формате "HH:mm".
   final String end;
 
+  Lesson copyWith({
+    String? subject,
+    String? type,
+    String? room,
+    String? teacher,
+    String? start,
+    String? end,
+  }) =>
+      Lesson(
+        subject: subject ?? this.subject,
+        type: type ?? this.type,
+        room: room ?? this.room,
+        teacher: teacher ?? this.teacher,
+        start: start ?? this.start,
+        end: end ?? this.end,
+      );
+
   factory Lesson.fromJson(Map<String, dynamic> json) => Lesson(
         subject: json['subject'] as String,
         type: json['type'] as String? ?? '',

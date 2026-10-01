@@ -12,6 +12,7 @@ import '../services/settings_service.dart';
 import '../services/weather_service.dart';
 import '../theme.dart';
 import '../utils/wmo.dart';
+import 'schedule_edit_screen.dart';
 import 'settings_screen.dart';
 
 enum _LessonStatus { past, soon, current, upcoming }
@@ -28,7 +29,7 @@ class ScheduleScreen extends StatefulWidget {
 }
 
 class _ScheduleScreenState extends State<ScheduleScreen> {
-  final ScheduleService _service = const ScheduleService();
+  final ScheduleService _service = ScheduleService();
   final ScrollController _scrollController = ScrollController();
 
   late Future<WeekSchedule> _future;
@@ -48,13 +49,28 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         ? Future.value(widget.schedule!)
         : _service.load();
     _selectedWeekday = DateTime.now().weekday;
-    _clock = Timer.periodic(const Duration(seconds: 30), (_) {
+    _clock = Timer.periodic(Duration(seconds: 30), (_) {
       if (mounted) setState(() {});
     });
     _weatherFuture = _loadWeather();
     unawaited(_loadSettings());
     unawaited(_loadReminders());
     unawaited(_future.then(_scrollToRelevant));
+    ScheduleService.revision.addListener(_onScheduleChanged);
+  }
+
+  /// Перечитывает расписание после правок в редакторе.
+  void _onScheduleChanged() {
+    if (widget.schedule != null || !mounted) return;
+    setState(() => _future = _service.load());
+  }
+
+  @override
+  void dispose() {
+    ScheduleService.revision.removeListener(_onScheduleChanged);
+    _clock?.cancel();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<WeatherData?> _loadWeather() async {
@@ -75,13 +91,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final ids = await NotificationService.instance.activePreLessonIds();
     if (!mounted) return;
     setState(() => _activeReminders = ids);
-  }
-
-  @override
-  void dispose() {
-    _clock?.cancel();
-    _scrollController.dispose();
-    super.dispose();
   }
 
   DateTime get _selectedDay {
@@ -105,7 +114,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final target = (index - 1).clamp(0, lessons.length - 1);
     _scrollController.animateTo(
       (target * _cardStep).toDouble(),
-      duration: const Duration(milliseconds: 450),
+      duration: Duration(milliseconds: 450),
       curve: Curves.easeOut,
     );
   }
@@ -163,7 +172,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   void _openSettings() {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (context) => const SettingsScreen()),
+      MaterialPageRoute<void>(builder: (context) => SettingsScreen()),
+    );
+  }
+
+  void _openEditor() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (context) => ScheduleEditScreen()),
     );
   }
 
@@ -171,12 +186,18 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Расписание'),
+        title: Text('Расписание'),
         actions: [
+          IconButton(
+            tooltip: 'Изменить расписание',
+            onPressed: _openEditor,
+            icon: Icon(Icons.edit_calendar_outlined,
+                size: 20, color: context.colors.muted),
+          ),
           IconButton(
             tooltip: 'Настройки',
             onPressed: _openSettings,
-            icon: const Icon(Icons.tune),
+            icon: Icon(Icons.tune),
           ),
         ],
       ),
@@ -184,7 +205,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
             return Center(
@@ -224,7 +245,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 const _CancelledBanner()
               else if (lessons.isNotEmpty)
                 AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
+                  duration: Duration(milliseconds: 220),
                   transitionBuilder: (child, animation) =>
                       FadeTransition(opacity: animation, child: child),
                   child: _ContextLine(
@@ -237,7 +258,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               _CancelBar(skipped: cancelled, onPressed: _toggleSkip),
               if (isToday && !cancelled && _weatherFuture != null)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 2, 18, 0),
+                  padding: EdgeInsets.fromLTRB(18, 2, 18, 0),
                   child: _WeatherHint(
                     future: _weatherFuture!,
                     nextLessonStart: next.isNotEmpty ? next.first.start : null,
@@ -245,21 +266,21 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 ),
               Expanded(
                 child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 260),
+                  duration: Duration(milliseconds: 260),
                   switchInCurve: Curves.easeOutCubic,
                   switchOutCurve: Curves.easeInCubic,
                   transitionBuilder: (child, animation) => FadeTransition(
                     opacity: animation,
                     child: SlideTransition(
                       position: Tween<Offset>(
-                        begin: const Offset(0.05, 0),
+                        begin: Offset(0.05, 0),
                         end: Offset.zero,
                       ).animate(animation),
                       child: child,
                     ),
                   ),
                   child: lessons.isEmpty && !cancelled
-                      ? const KeyedSubtree(
+                      ? KeyedSubtree(
                           key: ValueKey('empty'),
                           child: _EmptyDay(),
                         )
@@ -306,7 +327,7 @@ class _Header extends StatelessWidget {
   final DateTime day;
   final bool isToday;
 
-  static const List<String> _weekdayShort = [
+  static final List<String> _weekdayShort = [
     'Пн',
     'Вт',
     'Ср',
@@ -315,7 +336,7 @@ class _Header extends StatelessWidget {
     'Сб',
     'Вс',
   ];
-  static const List<String> _weekdayFull = [
+  static final List<String> _weekdayFull = [
     'Понедельник',
     'Вторник',
     'Среда',
@@ -324,7 +345,7 @@ class _Header extends StatelessWidget {
     'Суббота',
     'Воскресенье',
   ];
-  static const List<String> _monthGen = [
+  static final List<String> _monthGen = [
     'января',
     'февраля',
     'марта',
@@ -345,7 +366,7 @@ class _Header extends StatelessWidget {
         '${_weekdayShort[day.weekday - 1]} · ${day.day} ${_monthGen[day.month - 1]}'
             .toUpperCase();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
+      padding: EdgeInsets.fromLTRB(18, 8, 18, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -353,54 +374,54 @@ class _Header extends StatelessWidget {
             children: [
               Text(
                 dateLabel,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.5,
-                  color: kMuted,
+                  color: context.colors.muted,
                 ),
               ),
-              const Spacer(),
+              Spacer(),
               if (isToday)
                 Container(
-                  padding: const EdgeInsets.symmetric(
+                  padding: EdgeInsets.symmetric(
                     horizontal: 10,
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: kAccentSoft,
+                    color: context.colors.accentSoft,
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: const Text(
+                  child: Text(
                     'СЕГОДНЯ',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.2,
-                      color: kAccent,
+                      color: context.colors.accent,
                     ),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
             _weekdayFull[day.weekday - 1],
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.4,
               height: 1.1,
-              color: kText,
+              color: context.colors.text,
             ),
           ),
-          const SizedBox(height: 3),
+          SizedBox(height: 3),
           Text(
             'Группа $group',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: kMuted,
+              color: context.colors.muted,
             ),
           ),
         ],
@@ -427,8 +448,8 @@ class _DayStrip extends StatelessWidget {
     final now = DateTime.now();
     return Container(
       height: 56,
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: kBorder)),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: context.colors.border)),
       ),
       child: Row(
         children: [
@@ -448,7 +469,7 @@ class _DayStrip extends StatelessWidget {
                 onTap: () => onSelected(weekday),
               ),
             ),
-            if (weekday < 7) Container(width: 1, height: 24, color: kBorder),
+            if (weekday < 7) Container(width: 1, height: 24, color: context.colors.border),
           ],
         ],
       ),
@@ -475,11 +496,11 @@ class _WeekCell extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  static const List<String> _names = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  static final List<String> _names = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
   @override
   Widget build(BuildContext context) {
-    final accent = skipped ? kDanger : kAccent;
+    final accent = skipped ? context.colors.danger : context.colors.accent;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -492,28 +513,28 @@ class _WeekCell extends StatelessWidget {
               fontSize: 10.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.4,
-              color: selected ? accent : kMuted,
+              color: selected ? accent : context.colors.muted,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             '${date.day}',
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w800,
               fontFeatures: const [FontFeature.tabularFigures()],
-              color: selected || isToday ? accent : kText,
+              color: selected || isToday ? accent : context.colors.text,
             ),
           ),
-          const SizedBox(height: 5),
+          SizedBox(height: 5),
           AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
+            duration: Duration(milliseconds: 180),
             height: 2.5,
             width: selected ? 24 : (hasLessons ? 5 : 0),
             decoration: BoxDecoration(
               color: selected
                   ? accent
-                  : (hasLessons && !skipped ? kBorder : Colors.transparent),
+                  : (hasLessons && !skipped ? context.colors.border : Colors.transparent),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -556,27 +577,27 @@ class _ContextLine extends StatelessWidget {
       showDot = false;
     }
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 2),
+      padding: EdgeInsets.fromLTRB(18, 10, 18, 2),
       child: Row(
         children: [
           if (showDot) ...[
             Container(
               width: 6,
               height: 6,
-              decoration: const BoxDecoration(
-                color: kAccent,
+              decoration: BoxDecoration(
+                color: context.colors.accent,
                 shape: BoxShape.circle,
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
           ],
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
-                color: kMuted,
+                color: context.colors.muted,
               ),
             ),
           ),
@@ -612,31 +633,31 @@ class _WeatherHint extends StatelessWidget {
       future: future,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return const SizedBox(height: 2);
+          return SizedBox(height: 2);
         }
         final data = snapshot.data;
-        if (data == null) return const SizedBox(height: 2);
+        if (data == null) return SizedBox(height: 2);
         final (label, icon) = wmoInfo(data.current.weatherCode);
         final rainy = _isRainy(data.current.weatherCode);
         final hint = rainy ? ' · возьми зонт' : '';
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
-            color: kCard,
+            color: context.colors.card,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: rainy ? kAccent.withValues(alpha: 0.55) : kBorder),
+            border: Border.all(color: rainy ? context.colors.accent.withValues(alpha: 0.55) : context.colors.border),
           ),
           child: Row(
             children: [
-              Icon(icon, size: 16, color: rainy ? kAccent : kMuted),
-              const SizedBox(width: 8),
+              Icon(icon, size: 16, color: rainy ? context.colors.accent : context.colors.muted),
+              SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'На улице ${data.current.temperature.round()}°, $label'
                   '${nextLessonStart == null ? '' : ' · к первой паре $nextLessonStart'}$hint',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kMuted),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.colors.muted),
                 ),
               ),
             ],
@@ -653,15 +674,15 @@ class _CancelledBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(18, 10, 18, 2),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      margin: EdgeInsets.fromLTRB(18, 10, 18, 2),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: kDangerSoft,
+        color: context.colors.dangerSoft,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.event_busy, size: 17, color: kDanger),
+          Icon(Icons.event_busy, size: 17, color: context.colors.danger),
           SizedBox(width: 9),
           Expanded(
             child: Text(
@@ -669,7 +690,7 @@ class _CancelledBanner extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
-                color: kDanger,
+                color: context.colors.danger,
               ),
             ),
           ),
@@ -688,20 +709,20 @@ class _CancelBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 6, 18, 8),
+      padding: EdgeInsets.fromLTRB(18, 6, 18, 8),
       child: SizedBox(
         width: double.infinity,
         height: 42,
         child: OutlinedButton.icon(
           onPressed: onPressed,
           style: OutlinedButton.styleFrom(
-            foregroundColor: skipped ? kDanger : kMuted,
-            side: BorderSide(color: skipped ? kDanger : kBorder),
+            foregroundColor: skipped ? context.colors.danger : context.colors.muted,
+            side: BorderSide(color: skipped ? context.colors.danger : context.colors.border),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
-            backgroundColor: skipped ? kDangerSoft : Colors.transparent,
-            textStyle: const TextStyle(
+            backgroundColor: skipped ? context.colors.dangerSoft : Colors.transparent,
+            textStyle: TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 13.5,
             ),
@@ -735,7 +756,7 @@ class _Timeline extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       controller: scrollController,
-      padding: const EdgeInsets.fromLTRB(18, 4, 18, 24),
+      padding: EdgeInsets.fromLTRB(18, 4, 18, 24),
       itemCount: lessons.length,
       itemBuilder: (context, index) {
         final lesson = lessons[index];
@@ -745,7 +766,7 @@ class _Timeline extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _TimeBlock(lesson: lesson),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               _Rail(
                 lesson: lesson,
                 day: day,
@@ -753,7 +774,7 @@ class _Timeline extends StatelessWidget {
                 isLast: isLast,
                 cancelled: cancelled,
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: _LessonCard(
                   lesson: lesson,
@@ -783,27 +804,27 @@ class _TimeBlock extends StatelessWidget {
     return SizedBox(
       width: 46,
       child: Padding(
-        padding: const EdgeInsets.only(top: 11),
+        padding: EdgeInsets.only(top: 11),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               lesson.start,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w800,
                 fontFeatures: [FontFeature.tabularFigures()],
-                color: kText,
+                color: context.colors.text,
               ),
             ),
-            const SizedBox(height: 2),
+            SizedBox(height: 2),
             Text(
               lesson.end,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 fontFeatures: [FontFeature.tabularFigures()],
-                color: kMuted,
+                color: context.colors.muted,
               ),
             ),
           ],
@@ -852,14 +873,14 @@ class _Rail extends StatelessWidget {
         !cancelled &&
         (status == _LessonStatus.past || status == _LessonStatus.current);
     final dotColor = cancelled
-        ? kDanger
+        ? context.colors.danger
         : switch (status) {
             _LessonStatus.past ||
             _LessonStatus.current ||
-            _LessonStatus.soon => kAccent,
-            _LessonStatus.upcoming => kMuted,
+            _LessonStatus.soon => context.colors.accent,
+            _LessonStatus.upcoming => context.colors.muted,
           };
-    final segmentColor = started ? kAccent : kBorder;
+    final segmentColor = started ? context.colors.accent : context.colors.border;
     final dotSize = !cancelled && status == _LessonStatus.current ? 9.0 : 7.0;
 
     return SizedBox(
@@ -876,7 +897,7 @@ class _Rail extends StatelessWidget {
           Container(
             width: dotSize,
             height: dotSize,
-            margin: const EdgeInsets.only(top: 3, bottom: 3),
+            margin: EdgeInsets.only(top: 3, bottom: 3),
             decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
           ),
           if (!isLast)
@@ -886,11 +907,11 @@ class _Rail extends StatelessWidget {
                 children: [
                   Expanded(
                     flex: _accentFlex(fillFraction),
-                    child: Container(width: 1.75, color: kAccent),
+                    child: Container(width: 1.75, color: context.colors.accent),
                   ),
                   Expanded(
                     flex: 1000 - _accentFlex(fillFraction),
-                    child: Container(width: 1.75, color: kBorder),
+                    child: Container(width: 1.75, color: context.colors.border),
                   ),
                 ],
               ),
@@ -937,14 +958,14 @@ class _LessonCard extends StatelessWidget {
     return Opacity(
       opacity: dimmed ? 0.4 : 1,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+        duration: Duration(milliseconds: 250),
+        margin: EdgeInsets.only(bottom: 10),
+        padding: EdgeInsets.fromLTRB(14, 12, 10, 12),
         decoration: BoxDecoration(
-          color: live ? kCardRaised : kCard,
+          color: live ? context.colors.cardRaised : context.colors.card,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: live ? kAccent.withValues(alpha: 0.75) : kBorder,
+            color: live ? context.colors.accent.withValues(alpha: 0.75) : context.colors.border,
           ),
         ),
         child: Row(
@@ -956,22 +977,22 @@ class _LessonCard extends StatelessWidget {
                 children: [
                   if (cancelled) ...[
                     Container(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                         horizontal: 7,
                         vertical: 3,
                       ),
-                      margin: const EdgeInsets.only(bottom: 6),
+                      margin: EdgeInsets.only(bottom: 6),
                       decoration: BoxDecoration(
-                        color: kDangerSoft,
+                        color: context.colors.dangerSoft,
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: const Text(
+                      child: Text(
                         'ОТМЕНЁН',
                         style: TextStyle(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 1.1,
-                          color: kDanger,
+                          color: context.colors.danger,
                         ),
                       ),
                     ),
@@ -980,37 +1001,37 @@ class _LessonCard extends StatelessWidget {
                     lesson.subject,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15.5,
                       fontWeight: FontWeight.w700,
                       height: 1.2,
-                      color: kText,
+                      color: context.colors.text,
                     ),
                   ),
                   if (meta.isNotEmpty) ...[
-                    const SizedBox(height: 5),
+                    SizedBox(height: 5),
                     Text(
                       meta,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: kMuted,
+                        color: context.colors.muted,
                       ),
                     ),
                   ],
                   if (live) ...[
-                    const SizedBox(height: 7),
+                    SizedBox(height: 7),
                     Text(
                       status == _LessonStatus.current
                           ? 'ИДЁТ СЕЙЧАС'
                           : 'ЧЕРЕЗ ${_minutesTo(lesson, day, status)} МИН',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 9.5,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.1,
-                        color: kAccent,
+                        color: context.colors.accent,
                       ),
                     ),
                   ],
@@ -1027,10 +1048,10 @@ class _LessonCard extends StatelessWidget {
                       : 'Напомнить о паре за 10 минут',
                   onPressed: onToggleReminder,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+                  constraints: BoxConstraints(),
                   iconSize: 19,
                   icon: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
+                    duration: Duration(milliseconds: 180),
                     transitionBuilder: (child, animation) =>
                         RotationTransition(turns: animation, child: child),
                     child: Icon(
@@ -1038,7 +1059,7 @@ class _LessonCard extends StatelessWidget {
                           ? Icons.notifications_active
                           : Icons.notifications_none,
                       key: ValueKey(reminderActive),
-                      color: reminderActive ? kAccent : kMuted,
+                      color: reminderActive ? context.colors.accent : context.colors.muted,
                       size: 19,
                     ),
                   ),
@@ -1068,14 +1089,14 @@ class _EmptyDay extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.coffee_outlined, size: 46, color: kBorder),
-          const SizedBox(height: 12),
-          const Text(
+          Icon(Icons.coffee_outlined, size: 46, color: context.colors.border),
+          SizedBox(height: 12),
+          Text(
             'В этот день пар нет',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: kMuted,
+              color: context.colors.muted,
             ),
           ),
         ],

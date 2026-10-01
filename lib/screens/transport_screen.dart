@@ -25,9 +25,9 @@ class _TransportScreenState extends State<TransportScreen> {
   @override
   void initState() {
     super.initState();
-    _future = const TransportService().load();
+    _future = TransportService().load();
     _ticker = Timer.periodic(
-      const Duration(seconds: 30),
+      Duration(seconds: 30),
       (_) => setState(() {}),
     );
   }
@@ -41,21 +41,21 @@ class _TransportScreenState extends State<TransportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Транспорт'), centerTitle: false),
+      appBar: AppBar(title: Text('Транспорт'), centerTitle: false),
       body: FutureBuilder<TransitData>(
         future: _future,
         builder: (context, snapshot) {
           final data = snapshot.data;
           if (data == null) {
-            return const Center(
-              child: CircularProgressIndicator(color: kAccent),
+            return Center(
+              child: CircularProgressIndicator(color: context.colors.accent),
             );
           }
           if (data.stops.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
                 'Нет данных',
-                style: TextStyle(color: kMuted, fontSize: 13),
+                style: TextStyle(color: context.colors.muted, fontSize: 13),
               ),
             );
           }
@@ -64,23 +64,23 @@ class _TransportScreenState extends State<TransportScreen> {
           final arrivals = _arrivals(stop, data, now);
 
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
               Text(
                 data.college,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
-                  color: kText,
+                  color: context.colors.text,
                 ),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               SizedBox(
                 height: 38,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: data.stops.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  separatorBuilder: (_, _) => SizedBox(width: 8),
                   itemBuilder: (context, index) => _StopChip(
                     stop: data.stops[index],
                     selected: index == _stopIndex,
@@ -88,10 +88,10 @@ class _TransportScreenState extends State<TransportScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               ...arrivals.map(
                 (item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: EdgeInsets.only(bottom: 8),
                   child: _ArrivalTile(
                     route: item.route,
                     minutes: item.minutes,
@@ -100,12 +100,12 @@ class _TransportScreenState extends State<TransportScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
               Text(
                 data.note,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: kMuted,
+                style: TextStyle(
+                  color: context.colors.muted,
                   fontSize: 10.5,
                   height: 1.4,
                 ),
@@ -170,18 +170,18 @@ class _StopChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? kAccentSoft : kCard,
+          color: selected ? context.colors.accentSoft : context.colors.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: selected ? kAccent : kBorder),
+          border: Border.all(color: selected ? context.colors.accent : context.colors.border),
         ),
         child: Text(
           '${stop.name} · ${stop.distMeters} м',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
-            color: selected ? kAccent : kMuted,
+            color: selected ? context.colors.accent : context.colors.muted,
           ),
         ),
       ),
@@ -217,12 +217,12 @@ class _ArrivalTile extends StatelessWidget {
             : '≈ $minutes мин';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       decoration: BoxDecoration(
-        color: kCard,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: soon ? kAccent.withValues(alpha: 0.5) : kBorder,
+          color: soon ? context.colors.accent.withValues(alpha: 0.5) : context.colors.border,
         ),
       ),
       child: Row(
@@ -231,26 +231,26 @@ class _ArrivalTile extends StatelessWidget {
             width: 44,
             height: 40,
             decoration: BoxDecoration(
-              color: soon ? kAccentSoft : kCardRaised,
+              color: soon ? context.colors.accentSoft : context.colors.cardRaised,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: 13, color: kAccent),
-                const SizedBox(height: 2),
+                Icon(icon, size: 13, color: context.colors.accent),
+                SizedBox(height: 2),
                 Text(
                   route.number,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
-                    color: kAccent,
+                    color: context.colors.accent,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,15 +260,15 @@ class _ArrivalTile extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w800,
-                    color: soon ? kAccent : kText,
+                    color: soon ? context.colors.accent : context.colors.text,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   running
                       ? '${route.kind.label} · рейс в $clock · каждые ~${route.interval} мин'
                       : '${route.kind.label} · движение завершено',
-                  style: const TextStyle(fontSize: 11, color: kMuted),
+                  style: TextStyle(fontSize: 11, color: context.colors.muted),
                 ),
               ],
             ),
