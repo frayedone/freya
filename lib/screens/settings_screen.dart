@@ -6,6 +6,7 @@ import 'package:flutter/services.dart' show HapticFeedback;
 
 import '../app_avatar.dart';
 import '../services/app_icon_service.dart';
+import '../services/app_info.dart';
 import '../services/notifications/notifications.dart';
 import '../services/schedule_service.dart';
 import '../services/settings_service.dart';
@@ -24,9 +25,10 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  static final String _version = '1.0.0';
+  String _version = '…';
 
   bool _agendaEnabled = false;
+  bool _autoNext = true;
   String? _group;
   ThemeChoice _theme = ThemeChoice.dark;
   AccentChoice _accent = AccentChoice.amber;
@@ -41,6 +43,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _load() async {
     final agenda = await SettingsService.loadAgendaEnabled();
+    final autoNext = await SettingsService.loadAutoNextReminder();
+    final version = await AppInfo.versionLabel();
     String? group;
     try {
       final schedule = await ScheduleService().load();
@@ -51,6 +55,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     setState(() {
       _agendaEnabled = agenda;
+      _autoNext = autoNext;
+      _version = version;
       _group = group;
       _theme = appearance.theme;
       _accent = appearance.accent;
@@ -155,6 +161,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _toggleAutoNext(bool value) async {
+    HapticFeedback.selectionClick();
+    await SettingsService.saveAutoNextReminder(value);
+    if (!mounted) return;
+    setState(() => _autoNext = value);
+    _showMessage(
+      value
+          ? 'Freya сама включит напоминание о ближайшей паре'
+          : 'Автонапоминания больше не включаются',
+    );
+  }
+
   Future<void> _reset() async {    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -178,9 +196,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await SettingsService.saveSkippedWeekdays(<int>{});
     await NotificationService.instance.disableDailyAgenda();
     await SettingsService.saveAgendaEnabled(false);
+    await SettingsService.saveAutoNextReminder(true);
+    await SettingsService.saveAutoReminderId(0);
+    await SettingsService.clearSuppressedReminders();
     await NotificationService.instance.cancelAll();
     if (!mounted) return;
-    setState(() => _agendaEnabled = false);
+    setState(() {
+      _agendaEnabled = false;
+      _autoNext = true;
+    });
     _showMessage('Настройки сброшены');
   }
 
@@ -270,11 +294,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: _agendaEnabled,
             onChanged: _toggleAgenda,
           ),
+          SwitchListTile(
+            activeThumbColor: context.colors.accent,
+            activeTrackColor: context.colors.accentSoft,
+            title: Text('Напомнить о ближайшей паре', style: TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: Text(
+              'Напоминание включится само за 10 минут до следующей пары',
+              style: TextStyle(color: context.colors.muted, fontSize: 12.5),
+            ),
+            value: _autoNext,
+            onChanged: _toggleAutoNext,
+          ),
           ListTile(
             leading: Icon(Icons.alarm_add_outlined, color: context.colors.muted),
             title: Text('Напоминания о парах', style: TextStyle(fontWeight: FontWeight.w500)),
             subtitle: Text(
-              'Включаются колокольчиком на карточке занятия — за 10 минут до пары',
+              'Вручную — колокольчиком на карточке занятия, за 10 минут до пары',
               style: TextStyle(color: context.colors.muted, fontSize: 12.5),
             ),
           ),

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart' show HapticFeedback;
 import '../models/lesson.dart';
 import '../models/weather_data.dart';
 import '../models/week_schedule.dart';
+import '../services/auto_reminder_service.dart';
 import '../services/notifications/notifications.dart';
 import '../services/schedule_service.dart';
 import '../services/settings_service.dart';
@@ -36,6 +37,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   late int _selectedWeekday;
 
   Timer? _clock;
+  int _lastMinute = 0;
+  bool _syncingAuto = false;
+  bool _autoHintShown = false;
   Set<int> _skippedWeekdays = {};
   Set<int> _activeReminders = {};
   Future<WeatherData?>? _weatherFuture;
@@ -49,12 +53,21 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         ? Future.value(widget.schedule!)
         : _service.load();
     _selectedWeekday = DateTime.now().weekday;
+    _lastMinute = DateTime.now().minute;
+    // Тик раз в 30 секунд, но перерисовка — только когда сменилась минута:
+    // весь экран перестраивать каждый тик незачем.
     _clock = Timer.periodic(Duration(seconds: 30), (_) {
-      if (mounted) setState(() {});
+      if (!mounted) return;
+      final minute = DateTime.now().minute;
+      if (minute != _lastMinute) {
+        _lastMinute = minute;
+        setState(() {});
+      }
+      unawaited(_syncAutoReminder());
     });
     _weatherFuture = _loadWeather();
     unawaited(_loadSettings());
-    unawaited(_loadReminders());
+    unawaited(_syncAutoReminder());
     unawaited(_future.then(_scrollToRelevant));
     ScheduleService.revision.addListener(_onScheduleChanged);
   }
@@ -63,6 +76,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   void _onScheduleChanged() {
     if (widget.schedule != null || !mounted) return;
     setState(() => _future = _service.load());
+    unawaited(_syncAutoReminder());
   }
 
   @override
@@ -87,10 +101,29 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     setState(() => _skippedWeekdays = skipped);
   }
 
-  Future<void> _loadReminders() async {
-    final ids = await NotificationService.instance.activePreLessonIds();
-    if (!mounted) return;
-    setState(() => _activeReminders = ids);
+  /// Перечитывает напоминания и ставит автонапоминание о ближайшей паре.
+  Future<void> _syncAutoReminder() async {
+    if (_syncingAuto) return;
+    _syncingAuto = true;
+    try {
+      final result = await AutoReminderService.sync();
+      if (!mounted) return;
+      setState(() => _activeReminders = result.activeIds);
+      if (_autoHintShown) return;
+      if (result.permissionDenied) {
+        _autoHintShown = true;
+        _showMessage(
+          'Разреши уведомления — Freya сама напомнит о следующей паре',
+        );
+      } else if (result.scheduledSubject != null) {
+        _autoHintShown = true;
+        _showMessage(
+          'Напоминание о «${result.scheduledSubject}» включено автоматически',
+        );
+      }
+    } finally {
+      _syncingAuto = false;
+    }
   }
 
   DateTime get _selectedDay {
@@ -142,6 +175,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final id = NotificationService.preLessonIdFor(_selectedDay, index);
     if (_activeReminders.contains(id)) {
       await NotificationService.instance.cancelPreLesson(_selectedDay, index);
+      // Колокольчик выключен вручную — автонапоминание его не включает снова.
+      await SettingsService.addSuppressedReminder(id);
       if (!mounted) return;
       setState(() => _activeReminders.remove(id));
       _showMessage('Напоминание о «${lesson.subject}» убрано');
@@ -154,6 +189,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       if (!mounted) return;
       switch (result) {
         case NotificationResult.scheduled:
+          await SettingsService.removeSuppressedReminder(id);
           setState(() => _activeReminders.add(id));
           _showMessage('Напомним о «${lesson.subject}» за 10 минут до пары');
         case NotificationResult.tooLate:
@@ -242,7 +278,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 },
               ),
               if (cancelled)
-                const _CancelledBanner()
+                _CancelledBanner(onRestore: _toggleSkip)
               else if (lessons.isNotEmpty)
                 AnimatedSwitcher(
                   duration: Duration(milliseconds: 220),
@@ -255,7 +291,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     isToday: isToday,
                   ),
                 ),
-              _CancelBar(skipped: cancelled, onPressed: _toggleSkip),
+              if (!cancelled) _CancelBar(onPressed: _toggleSkip),
               if (isToday && !cancelled && _weatherFuture != null)
                 Padding(
                   padding: EdgeInsets.fromLTRB(18, 2, 18, 0),
@@ -669,16 +705,21 @@ class _WeatherHint extends StatelessWidget {
 }
 
 class _CancelledBanner extends StatelessWidget {
-  const _CancelledBanner();
+  const _CancelledBanner({required this.onRestore});
+
+  final VoidCallback onRestore;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.fromLTRB(18, 10, 18, 2),
-      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: EdgeInsets.fromLTRB(14, 4, 4, 4),
       decoration: BoxDecoration(
         color: context.colors.dangerSoft,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: context.colors.danger.withValues(alpha: 0.35),
+        ),
       ),
       child: Row(
         children: [
@@ -694,41 +735,51 @@ class _CancelledBanner extends StatelessWidget {
               ),
             ),
           ),
+          TextButton(
+            onPressed: onRestore,
+            style: TextButton.styleFrom(
+              foregroundColor: context.colors.danger,
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              minimumSize: Size(0, 30),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              textStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+            ),
+            child: Text('Вернуть'),
+          ),
         ],
       ),
     );
   }
 }
 
+/// Ненавязчивая кнопка отмены дня: маленькая, справа, без рамки.
 class _CancelBar extends StatelessWidget {
-  const _CancelBar({required this.skipped, required this.onPressed});
+  const _CancelBar({required this.onPressed});
 
-  final bool skipped;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(18, 6, 18, 8),
-      child: SizedBox(
-        width: double.infinity,
-        height: 42,
-        child: OutlinedButton.icon(
+      padding: EdgeInsets.fromLTRB(18, 0, 10, 2),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: TextButton.icon(
           onPressed: onPressed,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: skipped ? context.colors.danger : context.colors.muted,
-            side: BorderSide(color: skipped ? context.colors.danger : context.colors.border),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            backgroundColor: skipped ? context.colors.dangerSoft : Colors.transparent,
+          style: TextButton.styleFrom(
+            foregroundColor: context.colors.muted,
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            minimumSize: Size(0, 28),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
             textStyle: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 13.5,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.2,
             ),
           ),
-          icon: Icon(skipped ? Icons.restore : Icons.event_busy, size: 17),
-          label: Text(skipped ? 'Вернуть учебный день' : 'Отменить день'),
+          icon: Icon(Icons.event_busy_outlined, size: 14),
+          label: Text('Отменить день'),
         ),
       ),
     );

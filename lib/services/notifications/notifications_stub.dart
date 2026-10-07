@@ -13,6 +13,10 @@ class NotificationService {
 
   Future<void> init() async {}
 
+  bool get isSupported => false;
+
+  Future<bool> ensurePermission() async => false;
+
   Future<bool> enableDailyAgenda(WeekSchedule schedule, Set<int> skippedWeekdays) async => false;
 
   Future<void> disableDailyAgenda() async {}
@@ -36,6 +40,8 @@ class NotificationService {
       NotificationResult.notSupported;
 
   Future<void> cancelPreLesson(DateTime day, int lessonIndex) async {}
+
+  Future<void> cancelPreLessonById(int id) async {}
 
   Future<Set<int>> activePreLessonIds() async => {};
 

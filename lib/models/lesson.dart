@@ -45,13 +45,6 @@ class Lesson {
         end: json['end'] as String,
       );
 
-  /// Пара проходит в 09:00..10:30, а `day` — конкретный день недели.
-  bool isActiveAt(DateTime time, DateTime day) {
-    final s = startOn(day);
-    final e = endOn(day);
-    return !time.isBefore(s) && time.isBefore(e);
-  }
-
   DateTime startOn(DateTime day) => _timeOn(day, start);
   DateTime endOn(DateTime day) => _timeOn(day, end);
 

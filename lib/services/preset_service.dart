@@ -53,8 +53,11 @@ class PresetService {
 
   /// Сохраняет текущее расписание как новый пресет и делает его активным.
   static Future<SchedulePreset> saveCurrentAs(String name) async {
-    final schedule = await ScheduleService().load();
-    return addFrom(name: name, schedule: schedule);
+    final schedule = await const ScheduleService().load();
+    final preset = SchedulePreset(id: _newId(), name: name, schedule: schedule);
+    final presets = List<SchedulePreset>.from(await loadAll())..add(preset);
+    await _persist(presets);
+    return preset;
   }
 
   static Future<SchedulePreset> addFrom({
@@ -76,8 +79,8 @@ class PresetService {
   }
 
   /// Заменяет расписание пресета текущим и делает его активным.
-  static Future<void> overwriteWithCurrent(String id) async {
-    final schedule = await ScheduleService().load();
+  static Future<void> overwriteCurrent(String id) async {
+    final schedule = await const ScheduleService().load();
     final presets = List<SchedulePreset>.from(await loadAll());
     final index = presets.indexWhere((p) => p.id == id);
     if (index == -1) return;
@@ -113,9 +116,10 @@ class PresetService {
   ///
   /// Возвращает пресет, который теперь активен, либо null, если список уже
   /// был непустым.
-  static Future<SchedulePreset?> seedIfEmpty({String? name}) async {
+  static Future<SchedulePreset?> createIfEmpty({String? name}) async {
     if ((await loadAll()).isNotEmpty) return null;
-    final preset = await saveCurrentAs(name ?? (await ScheduleService().load()).group);
+    final current = await const ScheduleService().load();
+    final preset = await saveCurrentAs(name ?? current.group);
     await _setActive(preset.id);
     return preset;
   }

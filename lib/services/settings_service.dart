@@ -18,6 +18,18 @@ class SettingsService {
   static const String _onboardingKey = 'onboardingDone';
   static const String _avatarKey = 'appAvatar';
 
+  /// Автонапоминание о ближайшей паре.
+  static const String _autoNextKey = 'autoNextReminder';
+
+  /// id последнего напоминания, поставленного автоматически.
+  static const String _autoIdKey = 'autoNextReminderId';
+
+  /// id пар, по которым пользователь вручную выключил напоминание.
+  static const String _suppressedKey = 'autoReminderSuppressed';
+
+  /// Ограничение списка suppress-ов, чтобы он не рос бесконечно.
+  static const int _suppressedLimit = 60;
+
   /// Изменяется при смене темы/акцента — подписан MaterialApp.
   static final ValueNotifier<({ThemeChoice theme, AccentChoice accent})> appearance =
       ValueNotifier((theme: ThemeChoice.dark, accent: AccentChoice.amber));
@@ -89,5 +101,66 @@ class SettingsService {
   static Future<void> saveAgendaEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_agendaKey, enabled);
+  }
+
+  /// Включено ли автоматическое напоминание о ближайшей паре (по умолчанию — да).
+  static Future<bool> loadAutoNextReminder() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_autoNextKey) ?? true;
+  }
+
+  static Future<void> saveAutoNextReminder(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoNextKey, enabled);
+  }
+
+  /// id напоминания, которое сейчас поставлено автоматически (или 0).
+  static Future<int> loadAutoReminderId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_autoIdKey) ?? 0;
+  }
+
+  static Future<void> saveAutoReminderId(int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (id == 0) {
+      await prefs.remove(_autoIdKey);
+    } else {
+      await prefs.setInt(_autoIdKey, id);
+    }
+  }
+
+  /// Пары, по которым автонапоминание больше не включается (выключено вручную).
+  static Future<Set<int>> loadSuppressedReminders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getStringList(_suppressedKey) ?? const <String>[];
+    return raw.map(int.tryParse).whereType<int>().toSet();
+  }
+
+  static Future<void> addSuppressedReminder(int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    final current =
+        (prefs.getStringList(_suppressedKey) ?? const <String>[])
+            .where((raw) => raw != '$id')
+            .toList();
+    current.add('$id');
+    while (current.length > _suppressedLimit) {
+      current.removeAt(0);
+    }
+    await prefs.setStringList(_suppressedKey, current);
+  }
+
+  static Future<void> removeSuppressedReminder(int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    final current =
+        (prefs.getStringList(_suppressedKey) ?? const <String>[])
+            .where((raw) => raw != '$id')
+            .toList();
+    await prefs.setStringList(_suppressedKey, current);
+  }
+
+  /// Полностью сбрасывает список пар, по которым автонапоминание выключено.
+  static Future<void> clearSuppressedReminders() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_suppressedKey);
   }
 }

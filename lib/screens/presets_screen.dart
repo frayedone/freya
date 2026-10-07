@@ -113,7 +113,7 @@ class _PresetsScreenState extends State<PresetsScreen> {
       action: 'Обновить',
     );
     if (!confirmed || !mounted) return;
-    await PresetService.overwriteWithCurrent(preset.id);
+    await PresetService.overwriteCurrent(preset.id);
     _showMessage('Пресет «${preset.name}» обновлён');
   }
 

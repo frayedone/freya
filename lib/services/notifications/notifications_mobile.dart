@@ -76,6 +76,18 @@ class NotificationService {
     return true;
   }
 
+  /// Плагин уведомлений инициализирован и может работать на этой платформе.
+  bool get isSupported => _ready;
+
+  /// Запросить разрешение на показ уведомлений (Android 13+/iOS).
+  ///
+  /// Возвращает false, если уведомления на этой платформе недоступны
+  /// или пользователь отказал.
+  Future<bool> ensurePermission() async {
+    if (!_ready) return false;
+    return _requestPermission();
+  }
+
   /// Включить утренние уведомления: расписание на день.
   /// Для отменённых дней (в [skippedWeekdays]) уведомление не создаётся.
   Future<bool> enableDailyAgenda(WeekSchedule schedule, Set<int> skippedWeekdays) async {
@@ -313,6 +325,12 @@ class NotificationService {
   Future<void> cancelPreLesson(DateTime day, int lessonIndex) async {
     if (!_ready) return;
     await _plugin.cancel(id: preLessonIdFor(day, lessonIndex));
+  }
+
+  /// Отменить напоминание по его id ([preLessonIdFor]).
+  Future<void> cancelPreLessonById(int id) async {
+    if (!_ready || id == 0) return;
+    await _plugin.cancel(id: id);
   }
 
   /// id напоминаний, которые сейчас запланированы (для отрисовки тогглов).

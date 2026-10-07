@@ -46,7 +46,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     setState(() => _saving = true);
     try {
       final schedule = await ScheduleService().load();
-      final preset = await PresetService.seedIfEmpty(name: schedule.group);
+      final preset =       await PresetService.createIfEmpty(name: schedule.group);
       if (!mounted) return;
       setState(() => _presetSaved = true);
       ScaffoldMessenger.of(context)
