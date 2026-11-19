@@ -31,8 +31,11 @@ class SettingsService {
   static const int _suppressedLimit = 60;
 
   /// Изменяется при смене темы/акцента — подписан MaterialApp.
-  static final ValueNotifier<({ThemeChoice theme, AccentChoice accent})> appearance =
-      ValueNotifier((theme: ThemeChoice.dark, accent: AccentChoice.amber));
+  static final ValueNotifier<({ThemeChoice theme, AccentChoice accent})>
+  appearance = ValueNotifier((
+    theme: ThemeChoice.dark,
+    accent: AccentChoice.amber,
+  ));
 
   /// Показывать ли онбординг при старте (false — показывать).
   static final ValueNotifier<bool> onboardingDone = ValueNotifier(true);
@@ -83,7 +86,9 @@ class SettingsService {
   /// Дни недели (1 = пн … 7 = вс), которые пользователь отменил.
   static Future<Set<int>> loadSkippedWeekdays() async {
     final prefs = await SharedPreferences.getInstance();
-    return (prefs.getStringList(_skippedKey) ?? const []).map(int.parse).toSet();
+    return (prefs.getStringList(_skippedKey) ?? const [])
+        .map(int.parse)
+        .toSet();
   }
 
   static Future<void> saveSkippedWeekdays(Set<int> weekdays) async {
@@ -138,10 +143,9 @@ class SettingsService {
 
   static Future<void> addSuppressedReminder(int id) async {
     final prefs = await SharedPreferences.getInstance();
-    final current =
-        (prefs.getStringList(_suppressedKey) ?? const <String>[])
-            .where((raw) => raw != '$id')
-            .toList();
+    final current = (prefs.getStringList(_suppressedKey) ?? const <String>[])
+        .where((raw) => raw != '$id')
+        .toList();
     current.add('$id');
     while (current.length > _suppressedLimit) {
       current.removeAt(0);
@@ -151,10 +155,9 @@ class SettingsService {
 
   static Future<void> removeSuppressedReminder(int id) async {
     final prefs = await SharedPreferences.getInstance();
-    final current =
-        (prefs.getStringList(_suppressedKey) ?? const <String>[])
-            .where((raw) => raw != '$id')
-            .toList();
+    final current = (prefs.getStringList(_suppressedKey) ?? const <String>[])
+        .where((raw) => raw != '$id')
+        .toList();
     await prefs.setStringList(_suppressedKey, current);
   }
 

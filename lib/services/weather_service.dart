@@ -28,10 +28,8 @@ class WeatherService {
       queryParameters: {
         'latitude': '$latitude',
         'longitude': '$longitude',
-        'current':
-            'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m',
-        'daily':
-            'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max',
+        'current': 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m',
+        'daily': 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max',
         'timezone': 'Asia/Almaty',
         'forecast_days': '$days',
       },
@@ -48,7 +46,8 @@ class WeatherService {
       throw WeatherException('Сервер погоды ошибся (${response.statusCode})');
     }
 
-    final json = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+    final json =
+        jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
     return WeatherData.fromJson(json);
   }
 }

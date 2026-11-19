@@ -46,7 +46,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     setState(() => _saving = true);
     try {
       final schedule = await ScheduleService().load();
-      final preset =       await PresetService.createIfEmpty(name: schedule.group);
+      final preset = await PresetService.createIfEmpty(name: schedule.group);
       if (!mounted) return;
       setState(() => _presetSaved = true);
       ScaffoldMessenger.of(context)
@@ -195,14 +195,25 @@ class _WelcomePage extends StatelessWidget {
           ),
           const SizedBox(height: 26),
           Text(
-            'Добро пожаловать в Freya',
+            'FREYA',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 25,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.4,
-              height: 1.15,
+              fontFamily: kDisplayFont,
+              fontSize: 46,
+              letterSpacing: 3.0,
+              height: 1.0,
               color: context.colors.text,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Добро пожаловать',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.2,
+              color: context.colors.accent,
             ),
           ),
           const SizedBox(height: 12),
@@ -256,16 +267,21 @@ class _FeaturePage extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              fontSize: 23,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.3,
+              fontFamily: kDisplayFont,
+              fontSize: 28,
+              letterSpacing: 1.2,
+              height: 1.05,
               color: context.colors.text,
             ),
           ),
           const SizedBox(height: 10),
           Text(
             subtitle,
-            style: TextStyle(fontSize: 14, height: 1.45, color: context.colors.muted),
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.45,
+              color: context.colors.muted,
+            ),
           ),
           const SizedBox(height: 20),
           for (final point in points)
@@ -336,11 +352,12 @@ class _PresetPage extends StatelessWidget {
           ),
           const SizedBox(height: 22),
           Text(
-            'Сохрани первый пресет',
+            'СОХРАНИ ПРЕСЕТ',
             style: TextStyle(
-              fontSize: 23,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.3,
+              fontFamily: kDisplayFont,
+              fontSize: 26,
+              letterSpacing: 1.4,
+              height: 1.05,
               color: context.colors.text,
             ),
           ),
@@ -349,7 +366,11 @@ class _PresetPage extends StatelessWidget {
             'Пресет — это сохранённый набор пар. Мы запишем твоё текущее '
             'расписание в пресет, и позже ты сможешь переключаться между '
             'группами одним касанием.',
-            style: TextStyle(fontSize: 14, height: 1.45, color: context.colors.muted),
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.45,
+              color: context.colors.muted,
+            ),
           ),
           const SizedBox(height: 24),
           SizedBox(

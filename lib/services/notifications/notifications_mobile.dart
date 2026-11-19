@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/services.dart' show MethodChannel;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -19,7 +20,8 @@ class NotificationService {
 
   static final NotificationService instance = NotificationService._();
 
-  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
   bool _ready = false;
 
   static const MethodChannel _channel = MethodChannel('kz.freya.freya/updates');
@@ -39,7 +41,10 @@ class NotificationService {
 
   /// Стабильный id напоминания о паре: уникален для пары «дата + номер урока».
   static int preLessonIdFor(DateTime day, int lessonIndex) =>
-      _preLessonIdBase + day.year * 100000 + (day.month * 100 + day.day) * 10 + lessonIndex;
+      _preLessonIdBase +
+      day.year * 100000 +
+      (day.month * 100 + day.day) * 10 +
+      lessonIndex;
 
   Future<void> init() async {
     try {
@@ -63,12 +68,22 @@ class NotificationService {
     try {
       if (defaultTargetPlatform == TargetPlatform.android) {
         final android = _plugin
-            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
         return await android?.requestNotificationsPermission() ?? false;
       }
       if (defaultTargetPlatform == TargetPlatform.iOS) {
-        final ios = _plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
-        return await ios?.requestPermissions(alert: true, badge: true, sound: true) ?? false;
+        final ios = _plugin
+            .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin
+            >();
+        return await ios?.requestPermissions(
+              alert: true,
+              badge: true,
+              sound: true,
+            ) ??
+            false;
       }
     } catch (_) {
       return false;
@@ -90,7 +105,10 @@ class NotificationService {
 
   /// Включить утренние уведомления: расписание на день.
   /// Для отменённых дней (в [skippedWeekdays]) уведомление не создаётся.
-  Future<bool> enableDailyAgenda(WeekSchedule schedule, Set<int> skippedWeekdays) async {
+  Future<bool> enableDailyAgenda(
+    WeekSchedule schedule,
+    Set<int> skippedWeekdays,
+  ) async {
     if (!_ready) return false;
     final granted = await _requestPermission();
     if (!granted) return false;
@@ -119,7 +137,8 @@ class NotificationService {
       return false;
     }
     try {
-      return await _channel.invokeMethod<bool>('canScheduleExactAlarms') ?? false;
+      return await _channel.invokeMethod<bool>('canScheduleExactAlarms') ??
+          false;
     } catch (_) {
       return false;
     }
@@ -184,8 +203,9 @@ class NotificationService {
   /// будильник Android ставит через `AlarmManager.setRepeating()`, который
   /// батчится в maintenance-окно и приходит с задержкой до часа. Поэтому
   /// вместо повтора ставим отдельные одноразовые будильники.
-  AndroidScheduleMode _scheduleMode() =>
-      _exactAllowed ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle;
+  AndroidScheduleMode _scheduleMode() => _exactAllowed
+      ? AndroidScheduleMode.exactAllowWhileIdle
+      : AndroidScheduleMode.inexactAllowWhileIdle;
 
   /// Отменить все будильники расписания (по id из [_agendaIdBase]).
   Future<void> _cancelAgendas() async {
@@ -200,7 +220,10 @@ class NotificationService {
     await _plugin.cancel(id: _testId);
   }
 
-  Future<void> _scheduleAgendas(WeekSchedule schedule, Set<int> skippedWeekdays) async {
+  Future<void> _scheduleAgendas(
+    WeekSchedule schedule,
+    Set<int> skippedWeekdays,
+  ) async {
     if (!_ready) return;
     _exactAllowed = await canScheduleExact();
     await _cancelAgendas();
@@ -210,10 +233,14 @@ class NotificationService {
       channelDescription: 'Утреннее расписание занятий на сегодня',
       importance: Importance.high,
       priority: Priority.high,
-      actions: [AndroidNotificationAction('open_schedule', 'Открыть расписание')],
+      actions: [
+        AndroidNotificationAction('open_schedule', 'Открыть расписание'),
+      ],
     );
-    const details =
-        NotificationDetails(android: androidDetails, iOS: DarwinNotificationDetails());
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: DarwinNotificationDetails(),
+    );
 
     // Погода осмысленна только в ближайших днях.
     final weatherLine = await _todayWeatherLine();
@@ -225,8 +252,10 @@ class NotificationService {
       final lessons = schedule.days[weekday] ?? const <Lesson>[];
       final body = [
         if (dayOffset <= 1 && weatherLine.isNotEmpty) weatherLine,
-        if (lessons.isEmpty) 'Сегодня пар нет'
-        else ...lessons.map((lesson) => '${lesson.start} · ${lesson.subject}'),
+        if (lessons.isEmpty)
+          'Сегодня пар нет'
+        else
+          ...lessons.map((lesson) => '${lesson.start} · ${lesson.subject}'),
       ].where((line) => line.isNotEmpty).join('\n');
 
       final fireAt = DateTime(date.year, date.month, date.day, 9, 0);
@@ -276,20 +305,27 @@ class NotificationService {
       channelDescription: 'Напоминания о занятиях в колледже',
       importance: Importance.high,
       priority: Priority.high,
-      actions: [AndroidNotificationAction('open_schedule', 'Открыть расписание')],
+      actions: [
+        AndroidNotificationAction('open_schedule', 'Открыть расписание'),
+      ],
     );
-    const details =
-        NotificationDetails(android: androidDetails, iOS: DarwinNotificationDetails());
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: DarwinNotificationDetails(),
+    );
     const title = 'Скоро пара';
     final body =
         '${lesson.subject} · ${lesson.type.isEmpty ? 'занятие' : lesson.type} в ${lesson.start}';
 
-    final isMobile = !kIsWeb &&
+    final isMobile =
+        !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.android ||
             defaultTargetPlatform == TargetPlatform.iOS);
 
     if (isMobile) {
-      final fireAt = lesson.startOn(onDate).subtract(Duration(minutes: minutesBefore));
+      final fireAt = lesson
+          .startOn(onDate)
+          .subtract(Duration(minutes: minutesBefore));
       if (fireAt.isBefore(DateTime.now())) return NotificationResult.tooLate;
       try {
         await _plugin.zonedSchedule(

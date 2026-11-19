@@ -207,15 +207,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   void _openSettings() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (context) => SettingsScreen()),
-    );
+    Navigator.of(context)
+        .push(MaterialPageRoute<void>(builder: (context) => SettingsScreen()));
   }
 
   void _openEditor() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (context) => ScheduleEditScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (context) => ScheduleEditScreen()));
   }
 
   @override
@@ -227,8 +226,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           IconButton(
             tooltip: 'Изменить расписание',
             onPressed: _openEditor,
-            icon: Icon(Icons.edit_calendar_outlined,
-                size: 20, color: context.colors.muted),
+            icon: Icon(
+              Icons.edit_calendar_outlined,
+              size: 20,
+              color: context.colors.muted,
+            ),
           ),
           IconButton(
             tooltip: 'Настройки',
@@ -316,10 +318,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     ),
                   ),
                   child: lessons.isEmpty && !cancelled
-                      ? KeyedSubtree(
-                          key: ValueKey('empty'),
-                          child: _EmptyDay(),
-                        )
+                      ? KeyedSubtree(key: ValueKey('empty'), child: _EmptyDay())
                       : KeyedSubtree(
                           key: ValueKey('$_selectedWeekday-$cancelled'),
                           child: _Timeline(
@@ -420,10 +419,7 @@ class _Header extends StatelessWidget {
               Spacer(),
               if (isToday)
                 Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: context.colors.accentSoft,
                     borderRadius: BorderRadius.circular(999),
@@ -444,20 +440,29 @@ class _Header extends StatelessWidget {
           Text(
             _weekdayFull[day.weekday - 1],
             style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.4,
-              height: 1.1,
+              fontFamily: kDisplayFont,
+              fontSize: 34,
+              letterSpacing: 1.4,
+              height: 1.0,
               color: context.colors.text,
             ),
           ),
-          SizedBox(height: 3),
-          Text(
-            'Группа $group',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: context.colors.muted,
+          SizedBox(height: 6),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: context.colors.card,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: context.colors.border),
+            ),
+            child: Text(
+              'Группа $group',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.4,
+                color: context.colors.accent,
+              ),
             ),
           ),
         ],
@@ -505,7 +510,8 @@ class _DayStrip extends StatelessWidget {
                 onTap: () => onSelected(weekday),
               ),
             ),
-            if (weekday < 7) Container(width: 1, height: 24, color: context.colors.border),
+            if (weekday < 7)
+              Container(width: 1, height: 24, color: context.colors.border),
           ],
         ],
       ),
@@ -540,41 +546,51 @@ class _WeekCell extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            _names[weekday - 1],
-            style: TextStyle(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.4,
-              color: selected ? accent : context.colors.muted,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? accent.withValues(alpha: 0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              _names[weekday - 1],
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.4,
+                color: selected ? accent : context.colors.muted,
+              ),
             ),
-          ),
-          SizedBox(height: 4),
-          Text(
-            '${date.day}',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-              fontFeatures: const [FontFeature.tabularFigures()],
-              color: selected || isToday ? accent : context.colors.text,
+            SizedBox(height: 4),
+            Text(
+              '${date.day}',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                fontFeatures: const [FontFeature.tabularFigures()],
+                color: selected || isToday ? accent : context.colors.text,
+              ),
             ),
-          ),
-          SizedBox(height: 5),
-          AnimatedContainer(
-            duration: Duration(milliseconds: 180),
-            height: 2.5,
-            width: selected ? 24 : (hasLessons ? 5 : 0),
-            decoration: BoxDecoration(
-              color: selected
-                  ? accent
-                  : (hasLessons && !skipped ? context.colors.border : Colors.transparent),
-              borderRadius: BorderRadius.circular(2),
+            SizedBox(height: 4),
+            AnimatedContainer(
+              duration: Duration(milliseconds: 180),
+              height: 4,
+              width: selected ? 18 : (hasLessons ? 4 : 0),
+              decoration: BoxDecoration(
+                color: selected
+                    ? accent
+                    : (hasLessons && !skipped
+                          ? context.colors.border
+                          : Colors.transparent),
+                borderRadius: BorderRadius.circular(99),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -661,7 +677,9 @@ class _WeatherHint extends StatelessWidget {
   final String? nextLessonStart;
 
   static bool _isRainy(int code) =>
-      (code >= 51 && code <= 67) || (code >= 71 && code <= 86) || (code >= 95 && code <= 99);
+      (code >= 51 && code <= 67) ||
+      (code >= 71 && code <= 86) ||
+      (code >= 95 && code <= 99);
 
   @override
   Widget build(BuildContext context) {
@@ -681,11 +699,19 @@ class _WeatherHint extends StatelessWidget {
           decoration: BoxDecoration(
             color: context.colors.card,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: rainy ? context.colors.accent.withValues(alpha: 0.55) : context.colors.border),
+            border: Border.all(
+              color: rainy
+                  ? context.colors.accent.withValues(alpha: 0.55)
+                  : context.colors.border,
+            ),
           ),
           child: Row(
             children: [
-              Icon(icon, size: 16, color: rainy ? context.colors.accent : context.colors.muted),
+              Icon(
+                icon,
+                size: 16,
+                color: rainy ? context.colors.accent : context.colors.muted,
+              ),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -693,7 +719,11 @@ class _WeatherHint extends StatelessWidget {
                   '${nextLessonStart == null ? '' : ' · к первой паре $nextLessonStart'}$hint',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.colors.muted),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: context.colors.muted,
+                  ),
                 ),
               ),
             ],
@@ -931,7 +961,9 @@ class _Rail extends StatelessWidget {
             _LessonStatus.soon => context.colors.accent,
             _LessonStatus.upcoming => context.colors.muted,
           };
-    final segmentColor = started ? context.colors.accent : context.colors.border;
+    final segmentColor = started
+        ? context.colors.accent
+        : context.colors.border;
     final dotSize = !cancelled && status == _LessonStatus.current ? 9.0 : 7.0;
 
     return SizedBox(
@@ -1014,10 +1046,22 @@ class _LessonCard extends StatelessWidget {
         padding: EdgeInsets.fromLTRB(14, 12, 10, 12),
         decoration: BoxDecoration(
           color: live ? context.colors.cardRaised : context.colors.card,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: live ? context.colors.accent.withValues(alpha: 0.75) : context.colors.border,
+            color: live
+                ? context.colors.accent.withValues(alpha: 0.85)
+                : context.colors.border,
           ),
+          boxShadow: live
+              ? [
+                  BoxShadow(
+                    color: context.colors.glow,
+                    blurRadius: 18,
+                    spreadRadius: -4,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1028,10 +1072,7 @@ class _LessonCard extends StatelessWidget {
                 children: [
                   if (cancelled) ...[
                     Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 3,
-                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                       margin: EdgeInsets.only(bottom: 6),
                       decoration: BoxDecoration(
                         color: context.colors.dangerSoft,
@@ -1110,7 +1151,9 @@ class _LessonCard extends StatelessWidget {
                           ? Icons.notifications_active
                           : Icons.notifications_none,
                       key: ValueKey(reminderActive),
-                      color: reminderActive ? context.colors.accent : context.colors.muted,
+                      color: reminderActive
+                          ? context.colors.accent
+                          : context.colors.muted,
                       size: 19,
                     ),
                   ),
@@ -1140,13 +1183,36 @@ class _EmptyDay extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.coffee_outlined, size: 46, color: context.colors.border),
-          SizedBox(height: 12),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: context.colors.card,
+              shape: BoxShape.circle,
+              border: Border.all(color: context.colors.border),
+            ),
+            child: Icon(
+              Icons.nightlight_round,
+              size: 30,
+              color: context.colors.accent,
+            ),
+          ),
+          SizedBox(height: 14),
+          Text(
+            'ТИШИНА',
+            style: TextStyle(
+              fontFamily: kDisplayFont,
+              fontSize: 22,
+              letterSpacing: 2.0,
+              color: context.colors.text,
+            ),
+          ),
+          SizedBox(height: 4),
           Text(
             'В этот день пар нет',
             style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
               color: context.colors.muted,
             ),
           ),

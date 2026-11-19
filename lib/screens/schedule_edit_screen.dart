@@ -119,7 +119,9 @@ class _ScheduleEditScreenState extends State<ScheduleEditScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: context.colors.danger),
+            style: FilledButton.styleFrom(
+              backgroundColor: context.colors.danger,
+            ),
             child: Text('Удалить'),
           ),
         ],
@@ -149,7 +151,9 @@ class _ScheduleEditScreenState extends State<ScheduleEditScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: context.colors.danger),
+            style: FilledButton.styleFrom(
+              backgroundColor: context.colors.danger,
+            ),
             child: Text('Убрать'),
           ),
         ],
@@ -172,7 +176,9 @@ class _ScheduleEditScreenState extends State<ScheduleEditScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: context.colors.danger),
+            style: FilledButton.styleFrom(
+              backgroundColor: context.colors.danger,
+            ),
             child: Text('Сбросить'),
           ),
         ],
@@ -205,19 +211,31 @@ class _ScheduleEditScreenState extends State<ScheduleEditScreen> {
             IconButton(
               tooltip: 'Убрать пары дня',
               onPressed: _clearDay,
-              icon: Icon(Icons.delete_sweep_outlined, size: 20, color: context.colors.muted),
+              icon: Icon(
+                Icons.delete_sweep_outlined,
+                size: 20,
+                color: context.colors.muted,
+              ),
             ),
           if (schedule != null)
             IconButton(
               tooltip: 'Переименовать группу',
               onPressed: _renameGroup,
-              icon: Icon(Icons.edit_outlined, size: 20, color: context.colors.muted),
+              icon: Icon(
+                Icons.edit_outlined,
+                size: 20,
+                color: context.colors.muted,
+              ),
             ),
           if (schedule != null)
             IconButton(
               tooltip: 'Сбросить к исходному',
               onPressed: _resetAll,
-              icon: Icon(Icons.restart_alt, size: 20, color: context.colors.muted),
+              icon: Icon(
+                Icons.restart_alt,
+                size: 20,
+                color: context.colors.muted,
+              ),
             ),
         ],
       ),
@@ -240,7 +258,10 @@ class _ScheduleEditScreenState extends State<ScheduleEditScreen> {
                   height: 46,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     itemCount: 7,
                     separatorBuilder: (_, _) => const SizedBox(width: 8),
                     itemBuilder: (context, index) {
@@ -249,12 +270,19 @@ class _ScheduleEditScreenState extends State<ScheduleEditScreen> {
                       return GestureDetector(
                         onTap: () => setState(() => _weekday = weekday),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
-                            color: selected ? context.colors.accentSoft : context.colors.card,
+                            color: selected
+                                ? context.colors.accentSoft
+                                : context.colors.card,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: selected ? context.colors.accent : context.colors.border,
+                              color: selected
+                                  ? context.colors.accent
+                                  : context.colors.border,
                             ),
                           ),
                           child: Text(
@@ -262,7 +290,9 @@ class _ScheduleEditScreenState extends State<ScheduleEditScreen> {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
-                              color: selected ? context.colors.accent : context.colors.muted,
+                              color: selected
+                                  ? context.colors.accent
+                                  : context.colors.muted,
                             ),
                           ),
                         ),
@@ -289,7 +319,10 @@ class _ScheduleEditScreenState extends State<ScheduleEditScreen> {
                               SizedBox(height: 10),
                               Text(
                                 'В этот день пар нет',
-                                style: TextStyle(color: context.colors.muted, fontSize: 13),
+                                style: TextStyle(
+                                  color: context.colors.muted,
+                                  fontSize: 13,
+                                ),
                               ),
                               SizedBox(height: 12),
                               TextButton.icon(
@@ -306,7 +339,9 @@ class _ScheduleEditScreenState extends State<ScheduleEditScreen> {
                           itemBuilder: (context, index) {
                             final lesson = lessons[index];
                             return Dismissible(
-                              key: ValueKey('${_weekday}_${lesson.start}_${lesson.subject}'),
+                              key: ValueKey(
+                                '${_weekday}_${lesson.start}_${lesson.subject}',
+                              ),
                               direction: DismissDirection.endToStart,
                               background: Container(
                                 alignment: Alignment.centerRight,
@@ -316,11 +351,15 @@ class _ScheduleEditScreenState extends State<ScheduleEditScreen> {
                                   color: context.colors.danger,
                                   borderRadius: BorderRadius.circular(14),
                                 ),
-                                child: Icon(Icons.delete_outline, color: Colors.white),
+                                child: Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.white,
+                                ),
                               ),
                               onDismissed: (_) => _deleteLesson(index),
                               child: InkWell(
-                                onTap: () => _editLesson(existing: lesson, index: index),
+                                onTap: () =>
+                                    _editLesson(existing: lesson, index: index),
                                 borderRadius: BorderRadius.circular(14),
                                 child: Container(
                                   padding: const EdgeInsets.all(14),
@@ -328,7 +367,9 @@ class _ScheduleEditScreenState extends State<ScheduleEditScreen> {
                                   decoration: BoxDecoration(
                                     color: context.colors.card,
                                     borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(color: context.colors.border),
+                                    border: Border.all(
+                                      color: context.colors.border,
+                                    ),
                                   ),
                                   child: Row(
                                     children: [
@@ -338,7 +379,9 @@ class _ScheduleEditScreenState extends State<ScheduleEditScreen> {
                                         alignment: Alignment.center,
                                         decoration: BoxDecoration(
                                           color: context.colors.accentSoft,
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
                                         ),
                                         child: Text(
                                           '${index + 1}',
@@ -351,7 +394,8 @@ class _ScheduleEditScreenState extends State<ScheduleEditScreen> {
                                       SizedBox(width: 12),
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               lesson.subject,
@@ -367,8 +411,10 @@ class _ScheduleEditScreenState extends State<ScheduleEditScreen> {
                                             Text(
                                               [
                                                 '${lesson.start}–${lesson.end}',
-                                                if (lesson.type.isNotEmpty) lesson.type,
-                                                if (lesson.room.isNotEmpty) lesson.room,
+                                                if (lesson.type.isNotEmpty)
+                                                  lesson.type,
+                                                if (lesson.room.isNotEmpty)
+                                                  lesson.room,
                                               ].join(' · '),
                                               style: TextStyle(
                                                 fontSize: 12,
@@ -408,17 +454,23 @@ class _LessonSheet extends StatefulWidget {
 }
 
 class _LessonSheetState extends State<_LessonSheet> {
-  late final TextEditingController _subject =
-      TextEditingController(text: widget.lesson?.subject ?? '');
-  late final TextEditingController _type =
-      TextEditingController(text: widget.lesson?.type ?? '');
-  late final TextEditingController _room =
-      TextEditingController(text: widget.lesson?.room ?? '');
-  late final TextEditingController _teacher =
-      TextEditingController(text: widget.lesson?.teacher ?? '');
+  late final TextEditingController _subject = TextEditingController(
+    text: widget.lesson?.subject ?? '',
+  );
+  late final TextEditingController _type = TextEditingController(
+    text: widget.lesson?.type ?? '',
+  );
+  late final TextEditingController _room = TextEditingController(
+    text: widget.lesson?.room ?? '',
+  );
+  late final TextEditingController _teacher = TextEditingController(
+    text: widget.lesson?.teacher ?? '',
+  );
 
-  late TimeOfDay _start = _parse(widget.lesson?.start) ?? const TimeOfDay(hour: 9, minute: 0);
-  late TimeOfDay _end = _parse(widget.lesson?.end) ?? const TimeOfDay(hour: 10, minute: 30);
+  late TimeOfDay _start =
+      _parse(widget.lesson?.start) ?? const TimeOfDay(hour: 9, minute: 0);
+  late TimeOfDay _end =
+      _parse(widget.lesson?.end) ?? const TimeOfDay(hour: 10, minute: 30);
 
   @override
   void initState() {
@@ -480,21 +532,33 @@ class _LessonSheetState extends State<_LessonSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.lesson == null ? 'Новая пара' : 'Изменить пару',
+              widget.lesson == null ? 'НОВАЯ ПАРА' : 'ИЗМЕНИТЬ ПАРУ',
               style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
+                fontFamily: kDisplayFont,
+                fontSize: 20,
+                letterSpacing: 1.2,
                 color: context.colors.text,
               ),
             ),
             SizedBox(height: 16),
-            _Field(controller: _subject, label: 'Предмет', autofocus: widget.lesson == null),
+            _Field(
+              controller: _subject,
+              label: 'Предмет',
+              autofocus: widget.lesson == null,
+            ),
             SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _Field(controller: _type, label: 'Тип (лекция, практика)')),
+                Expanded(
+                  child: _Field(
+                    controller: _type,
+                    label: 'Тип (лекция, практика)',
+                  ),
+                ),
                 SizedBox(width: 10),
-                Expanded(child: _Field(controller: _room, label: 'Аудитория')),
+                Expanded(
+                  child: _Field(controller: _room, label: 'Аудитория'),
+                ),
               ],
             ),
             SizedBox(height: 10),
@@ -538,15 +602,15 @@ class _LessonSheetState extends State<_LessonSheet> {
                     onPressed: _subject.text.trim().isEmpty
                         ? null
                         : () => Navigator.of(context).pop(
-                              Lesson(
-                                subject: _subject.text.trim(),
-                                type: _type.text.trim(),
-                                room: _room.text.trim(),
-                                teacher: _teacher.text.trim(),
-                                start: _format(_start),
-                                end: _format(_end),
-                              ),
+                            Lesson(
+                              subject: _subject.text.trim(),
+                              type: _type.text.trim(),
+                              room: _room.text.trim(),
+                              teacher: _teacher.text.trim(),
+                              start: _format(_start),
+                              end: _format(_end),
                             ),
+                          ),
                     child: Text('Сохранить'),
                   ),
                 ),
@@ -560,7 +624,11 @@ class _LessonSheetState extends State<_LessonSheet> {
 }
 
 class _Field extends StatelessWidget {
-  const _Field({required this.controller, required this.label, this.autofocus = false});
+  const _Field({
+    required this.controller,
+    required this.label,
+    this.autofocus = false,
+  });
 
   final TextEditingController controller;
   final String label;

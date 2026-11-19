@@ -15,12 +15,12 @@ class CurrentWeather {
   final int weatherCode;
 
   factory CurrentWeather.fromJson(Map<String, dynamic> json) => CurrentWeather(
-        temperature: (json['temperature_2m'] as num).toDouble(),
-        feelsLike: (json['apparent_temperature'] as num).toDouble(),
-        humidity: (json['relative_humidity_2m'] as num).toDouble(),
-        windSpeed: (json['wind_speed_10m'] as num).toDouble(),
-        weatherCode: json['weather_code'] as int,
-      );
+    temperature: (json['temperature_2m'] as num).toDouble(),
+    feelsLike: (json['apparent_temperature'] as num).toDouble(),
+    humidity: (json['relative_humidity_2m'] as num).toDouble(),
+    windSpeed: (json['wind_speed_10m'] as num).toDouble(),
+    weatherCode: json['weather_code'] as int,
+  );
 }
 
 /// Прогноз на один день.
@@ -40,12 +40,13 @@ class ForecastDay {
   final int precipitationProbability;
 
   factory ForecastDay.fromJson(Map<String, dynamic> json) => ForecastDay(
-        date: DateTime.parse(json['time'] as String),
-        weatherCode: json['weather_code'] as int,
-        min: (json['temperature_2m_min'] as num).toDouble(),
-        max: (json['temperature_2m_max'] as num).toDouble(),
-        precipitationProbability: json['precipitation_probability_max'] as int? ?? 0,
-      );
+    date: DateTime.parse(json['time'] as String),
+    weatherCode: json['weather_code'] as int,
+    min: (json['temperature_2m_min'] as num).toDouble(),
+    max: (json['temperature_2m_max'] as num).toDouble(),
+    precipitationProbability:
+        json['precipitation_probability_max'] as int? ?? 0,
+  );
 }
 
 class WeatherData {
@@ -65,13 +66,15 @@ class WeatherData {
 
     final forecast = <ForecastDay>[];
     for (var i = 0; i < times.length; i++) {
-      forecast.add(ForecastDay.fromJson({
-        'time': times[i],
-        'weather_code': codes[i],
-        'temperature_2m_min': mins[i],
-        'temperature_2m_max': maxs[i],
-        'precipitation_probability_max': i < probs.length ? probs[i] : 0,
-      }));
+      forecast.add(
+        ForecastDay.fromJson({
+          'time': times[i],
+          'weather_code': codes[i],
+          'temperature_2m_min': mins[i],
+          'temperature_2m_max': maxs[i],
+          'precipitation_probability_max': i < probs.length ? probs[i] : 0,
+        }),
+      );
     }
 
     return WeatherData(

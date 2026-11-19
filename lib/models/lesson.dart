@@ -26,39 +26,44 @@ class Lesson {
     String? teacher,
     String? start,
     String? end,
-  }) =>
-      Lesson(
-        subject: subject ?? this.subject,
-        type: type ?? this.type,
-        room: room ?? this.room,
-        teacher: teacher ?? this.teacher,
-        start: start ?? this.start,
-        end: end ?? this.end,
-      );
+  }) => Lesson(
+    subject: subject ?? this.subject,
+    type: type ?? this.type,
+    room: room ?? this.room,
+    teacher: teacher ?? this.teacher,
+    start: start ?? this.start,
+    end: end ?? this.end,
+  );
 
   factory Lesson.fromJson(Map<String, dynamic> json) => Lesson(
-        subject: json['subject'] as String,
-        type: json['type'] as String? ?? '',
-        room: json['room'] as String? ?? '',
-        teacher: json['teacher'] as String? ?? '',
-        start: json['start'] as String,
-        end: json['end'] as String,
-      );
+    subject: json['subject'] as String,
+    type: json['type'] as String? ?? '',
+    room: json['room'] as String? ?? '',
+    teacher: json['teacher'] as String? ?? '',
+    start: json['start'] as String,
+    end: json['end'] as String,
+  );
 
   DateTime startOn(DateTime day) => _timeOn(day, start);
   DateTime endOn(DateTime day) => _timeOn(day, end);
 
   static DateTime _timeOn(DateTime day, String hhmm) {
     final parts = hhmm.split(':');
-    return DateTime(day.year, day.month, day.day, int.parse(parts[0]), int.parse(parts[1]));
+    return DateTime(
+      day.year,
+      day.month,
+      day.day,
+      int.parse(parts[0]),
+      int.parse(parts[1]),
+    );
   }
 
   Map<String, dynamic> toJson() => {
-        'subject': subject,
-        'type': type,
-        'room': room,
-        'teacher': teacher,
-        'start': start,
-        'end': end,
-      };
+    'subject': subject,
+    'type': type,
+    'room': room,
+    'teacher': teacher,
+    'start': start,
+    'end': end,
+  };
 }

@@ -18,12 +18,12 @@ enum AppAvatar {
   final String key;
 
   String get description => switch (this) {
-        AppAvatar.freya => 'Искра — классическая иконка Freya',
-        AppAvatar.moon => 'Спокойная ночная иконка',
-        AppAvatar.star => 'Яркая звезда для иконки',
-        AppAvatar.leaf => 'Зелёный лист для иконки',
-        AppAvatar.comet => 'Комета для иконки',
-      };
+    AppAvatar.freya => 'Искра — классическая иконка Freya',
+    AppAvatar.moon => 'Спокойная ночная иконка',
+    AppAvatar.star => 'Яркая звезда для иконки',
+    AppAvatar.leaf => 'Зелёный лист для иконки',
+    AppAvatar.comet => 'Комета для иконки',
+  };
 
   static AppAvatar fromKey(String? key) =>
       values.firstWhere((e) => e.key == key, orElse: () => AppAvatar.freya);

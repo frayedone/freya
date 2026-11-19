@@ -19,7 +19,15 @@ class WeekSchedule {
     return copyWith(days: next);
   }
 
-  static const List<String> weekdayShort = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  static const List<String> weekdayShort = [
+    'Пн',
+    'Вт',
+    'Ср',
+    'Чт',
+    'Пт',
+    'Сб',
+    'Вс',
+  ];
 
   String weekdayName(int weekday) => weekdayShort[weekday - 1];
 
@@ -30,10 +38,11 @@ class WeekSchedule {
     for (final item in json['days'] as List? ?? const []) {
       final map = item as Map<String, dynamic>;
       final weekday = map['weekday'] as int;
-      final lessons = (map['lessons'] as List? ?? const [])
-          .map((lesson) => Lesson.fromJson(lesson as Map<String, dynamic>))
-          .toList()
-        ..sort((a, b) => a.start.compareTo(b.start));
+      final lessons =
+          (map['lessons'] as List? ?? const [])
+              .map((lesson) => Lesson.fromJson(lesson as Map<String, dynamic>))
+              .toList()
+            ..sort((a, b) => a.start.compareTo(b.start));
       days[weekday] = lessons;
     }
     return WeekSchedule(
@@ -43,12 +52,14 @@ class WeekSchedule {
   }
 
   Map<String, dynamic> toJson() => {
-        'group': group,
-        'days': days.entries
-            .map((e) => {
-                  'weekday': e.key,
-                  'lessons': e.value.map((lesson) => lesson.toJson()).toList(),
-                })
-            .toList(),
-      };
+    'group': group,
+    'days': days.entries
+        .map(
+          (e) => {
+            'weekday': e.key,
+            'lessons': e.value.map((lesson) => lesson.toJson()).toList(),
+          },
+        )
+        .toList(),
+  };
 }

@@ -34,7 +34,10 @@ class FreyaApp extends StatelessWidget {
           title: 'Freya',
           debugShowCheckedModeBanner: false,
           theme: FreyaTheme.build(brightness: Brightness.light, accent: accent),
-          darkTheme: FreyaTheme.build(brightness: Brightness.dark, accent: accent),
+          darkTheme: FreyaTheme.build(
+            brightness: Brightness.dark,
+            accent: accent,
+          ),
           themeMode: theme.mode,
           home: ValueListenableBuilder<bool>(
             valueListenable: SettingsService.onboardingDone,

@@ -64,8 +64,9 @@ class UpdateService {
   /// Пустая строка = репозиторий публичный, токен не нужен.
   static const String githubToken = kUpdateGithubToken;
 
-  static const MethodChannel _installChannel =
-      MethodChannel('kz.freya.freya/updates');
+  static const MethodChannel _installChannel = MethodChannel(
+    'kz.freya.freya/updates',
+  );
 
   static final StreamController<String> _installErrorController =
       StreamController<String>.broadcast();
@@ -131,7 +132,7 @@ class UpdateService {
       final needsSignedUrl = githubToken.isNotEmpty && assetId != null;
       final apkUrl = needsSignedUrl
           ? 'https://api.github.com/repos/$repoOwner/$repoName/'
-              'releases/assets/$assetId'
+                'releases/assets/$assetId'
           : directUrl;
       if (apkUrl == null) return null;
 
@@ -151,7 +152,10 @@ class UpdateService {
   ///
   /// Для приватных репозиториев токен используется только для GitHub API,
   /// а сам файл скачивается по подписанной ссылке без токена.
-  Future<File> downloadApk(String url, {void Function(double)? onProgress}) async {
+  Future<File> downloadApk(
+    String url, {
+    void Function(double)? onProgress,
+  }) async {
     final client = http.Client();
     try {
       final dir = await _updateDir();
@@ -171,12 +175,14 @@ class UpdateService {
         if (authenticated) {
           request.headers['Authorization'] = 'Bearer $githubToken';
         }
-        final response = await client.send(request).timeout(
-              const Duration(minutes: 5),
-            );
+        final response = await client
+            .send(request)
+            .timeout(const Duration(minutes: 5));
 
         final location = response.headers['location'];
-        if (response.statusCode >= 300 && response.statusCode < 400 && location != null) {
+        if (response.statusCode >= 300 &&
+            response.statusCode < 400 &&
+            location != null) {
           await response.stream.drain<void>();
           // Дальше идём без токена — ссылка GitHub уже подписана.
           authenticated = false;
@@ -187,13 +193,16 @@ class UpdateService {
         if (response.statusCode != 200) {
           await response.stream.drain<void>();
           throw UpdateException(
-              'Не удалось скачать обновление (код ${response.statusCode})');
+            'Не удалось скачать обновление (код ${response.statusCode})',
+          );
         }
 
         final contentType = response.headers['content-type'] ?? '';
         if (contentType.contains('json')) {
           await response.stream.drain<void>();
-          throw UpdateException('GitHub вернул не файл обновления — попробуй ещё раз');
+          throw UpdateException(
+            'GitHub вернул не файл обновления — попробуй ещё раз',
+          );
         }
 
         total = response.contentLength ?? 0;
@@ -257,9 +266,7 @@ class UpdateService {
   /// Запускает системный установщик APK (только Android).
   Future<void> installApk(String path) async {
     try {
-      await _installChannel.invokeMethod<void>('installApk', {
-        'path': path,
-      });
+      await _installChannel.invokeMethod<void>('installApk', {'path': path});
     } on PlatformException catch (e) {
       throw UpdateException(e.message ?? 'Не удалось запустить установку');
     } catch (e) {

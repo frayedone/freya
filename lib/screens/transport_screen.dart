@@ -34,16 +34,14 @@ class _TransportScreenState extends State<TransportScreen> {
               ],
               selected: {_mode},
               showSelectedIcon: false,
-              onSelectionChanged: (values) => setState(() => _mode = values.first),
+              onSelectionChanged: (values) =>
+                  setState(() => _mode = values.first),
             ),
           ),
           Expanded(
             child: IndexedStack(
               index: _mode,
-              children: [
-                _StopArrivals(),
-                _RoutePlanner(),
-              ],
+              children: [_StopArrivals(), _RoutePlanner()],
             ),
           ),
         ],
@@ -209,7 +207,11 @@ class _RoutePlannerState extends State<_RoutePlanner> {
       _network = network;
       if (network.stops.isNotEmpty) {
         _origin = _pick(network, 'college', 0);
-        _destination = _pick(network, 'kok_tobe_base', network.stops.length - 1);
+        _destination = _pick(
+          network,
+          'kok_tobe_base',
+          network.stops.length - 1,
+        );
       }
     });
   }
@@ -245,7 +247,9 @@ class _RoutePlannerState extends State<_RoutePlanner> {
   Widget build(BuildContext context) {
     final network = _network;
     if (network == null) {
-      return Center(child: CircularProgressIndicator(color: context.colors.accent));
+      return Center(
+        child: CircularProgressIndicator(color: context.colors.accent),
+      );
     }
 
     return ListView(
@@ -275,7 +279,11 @@ class _RoutePlannerState extends State<_RoutePlanner> {
                 padding: EdgeInsets.only(left: 11),
                 child: Row(
                   children: [
-                    Container(width: 2, height: 18, color: context.colors.border),
+                    Container(
+                      width: 2,
+                      height: 18,
+                      color: context.colors.border,
+                    ),
                     Spacer(),
                     IconButton(
                       tooltip: 'Поменять местами',
@@ -353,7 +361,11 @@ class _RoutePlannerState extends State<_RoutePlanner> {
                 child: Text(
                   'Маршрут не найден. В демо-сети не так много линий — попробуй '
                   'другие остановки.',
-                  style: TextStyle(color: context.colors.muted, fontSize: 12.5, height: 1.4),
+                  style: TextStyle(
+                    color: context.colors.muted,
+                    fontSize: 12.5,
+                    height: 1.4,
+                  ),
                 ),
               ),
             ],
@@ -407,11 +419,18 @@ class _Endpoint extends StatelessWidget {
             initialValue: value,
             isExpanded: true,
             dropdownColor: context.colors.cardRaised,
-            icon: Icon(Icons.expand_more, color: context.colors.muted, size: 20),
+            icon: Icon(
+              Icons.expand_more,
+              color: context.colors.muted,
+              size: 20,
+            ),
             style: TextStyle(fontSize: 14, color: context.colors.text),
             decoration: InputDecoration(
               labelText: label,
-              labelStyle: TextStyle(color: context.colors.muted, fontSize: 12.5),
+              labelStyle: TextStyle(
+                color: context.colors.muted,
+                fontSize: 12.5,
+              ),
               isDense: true,
             ),
             items: [
@@ -433,24 +452,38 @@ class _Hint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 18),
+      padding: EdgeInsets.symmetric(vertical: 24),
       child: Column(
         children: [
-          Icon(Icons.alt_route, size: 42, color: context.colors.border),
-          SizedBox(height: 10),
-          Text(
-            'Выбери «откуда» и «куда»',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: context.colors.muted,
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: context.colors.card,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: context.colors.border),
+            ),
+            child: Icon(
+              Icons.alt_route,
+              size: 28,
+              color: context.colors.accent,
             ),
           ),
-          SizedBox(height: 4),
+          SizedBox(height: 12),
           Text(
-            'Покажем маршрут с пересадками и когда придёт транспорт.',
+            'ПОСТРОЙ МАРШРУТ',
+            style: TextStyle(
+              fontFamily: kDisplayFont,
+              fontSize: 18,
+              letterSpacing: 1.4,
+              color: context.colors.text,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Выбери «откуда» и «куда» — покажем пересадки и время в пути.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, color: context.colors.muted),
+            style: TextStyle(fontSize: 12.5, color: context.colors.muted),
           ),
         ],
       ),
@@ -499,7 +532,10 @@ class _ItineraryCard extends StatelessWidget {
                   Text(
                     '${_transfersLabel(itinerary.transfers)} · '
                     '${itinerary.stopsCount} ${_stopsWord(itinerary.stopsCount)}',
-                    style: TextStyle(fontSize: 11.5, color: context.colors.muted),
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: context.colors.muted,
+                    ),
                   ),
                 ],
               ),
@@ -512,7 +548,8 @@ class _ItineraryCard extends StatelessWidget {
                 )
               else
                 _Badge(
-                  text: '${itinerary.transfers} ${_transferWord(itinerary.transfers)}',
+                  text:
+                      '${itinerary.transfers} ${_transferWord(itinerary.transfers)}',
                   color: context.colors.muted,
                   background: context.colors.cardRaised,
                 ),
@@ -534,7 +571,11 @@ class _ItineraryCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(_kindIcon(first.line.kind), size: 16, color: context.colors.accent),
+                Icon(
+                  _kindIcon(first.line.kind),
+                  size: 16,
+                  color: context.colors.accent,
+                ),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -557,7 +598,11 @@ class _ItineraryCard extends StatelessWidget {
 }
 
 class _LegRow extends StatelessWidget {
-  const _LegRow({required this.leg, required this.isFirst, required this.isLast});
+  const _LegRow({
+    required this.leg,
+    required this.isFirst,
+    required this.isLast,
+  });
 
   final ItineraryLeg leg;
   final bool isFirst;
@@ -581,7 +626,11 @@ class _LegRow extends StatelessWidget {
                     color: context.colors.accentSoft,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(_kindIcon(leg.line.kind), size: 14, color: context.colors.accent),
+                  child: Icon(
+                    _kindIcon(leg.line.kind),
+                    size: 14,
+                    color: context.colors.accent,
+                  ),
                 ),
                 if (!isLast)
                   Expanded(
@@ -619,13 +668,19 @@ class _LegRow extends StatelessWidget {
                     SizedBox(height: 2),
                     Text(
                       'Пересадка, ожидание ~${leg.waitMinutes} мин',
-                      style: TextStyle(fontSize: 11, color: context.colors.muted),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: context.colors.muted,
+                      ),
                     ),
                   ] else ...[
                     SizedBox(height: 2),
                     Text(
                       'Остановок: ${leg.stopsCount} · ожидание ~${leg.waitMinutes} мин',
-                      style: TextStyle(fontSize: 11, color: context.colors.muted),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: context.colors.muted,
+                      ),
                     ),
                   ],
                 ],
@@ -639,7 +694,11 @@ class _LegRow extends StatelessWidget {
 }
 
 class _Badge extends StatelessWidget {
-  const _Badge({required this.text, required this.color, required this.background});
+  const _Badge({
+    required this.text,
+    required this.color,
+    required this.background,
+  });
 
   final String text;
   final Color color;
@@ -655,7 +714,11 @@ class _Badge extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: color),
+        style: TextStyle(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
       ),
     );
   }
@@ -689,7 +752,9 @@ class _StopChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? context.colors.accentSoft : context.colors.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: selected ? context.colors.accent : context.colors.border),
+          border: Border.all(
+            color: selected ? context.colors.accent : context.colors.border,
+          ),
         ),
         child: Text(
           '${stop.name} · ${stop.distMeters} м',
@@ -723,8 +788,8 @@ class _ArrivalTile extends StatelessWidget {
     final eta = !running
         ? '—'
         : soon
-            ? 'через $minutes мин'
-            : '≈ $minutes мин';
+        ? 'через $minutes мин'
+        : '≈ $minutes мин';
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14, vertical: 11),
@@ -732,7 +797,9 @@ class _ArrivalTile extends StatelessWidget {
         color: context.colors.card,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: soon ? context.colors.accent.withValues(alpha: 0.5) : context.colors.border,
+          color: soon
+              ? context.colors.accent.withValues(alpha: 0.5)
+              : context.colors.border,
         ),
       ),
       child: Row(
@@ -741,13 +808,19 @@ class _ArrivalTile extends StatelessWidget {
             width: 44,
             height: 40,
             decoration: BoxDecoration(
-              color: soon ? context.colors.accentSoft : context.colors.cardRaised,
+              color: soon
+                  ? context.colors.accentSoft
+                  : context.colors.cardRaised,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(_kindIcon(route.kind), size: 13, color: context.colors.accent),
+                Icon(
+                  _kindIcon(route.kind),
+                  size: 13,
+                  color: context.colors.accent,
+                ),
                 SizedBox(height: 2),
                 Text(
                   route.number,
@@ -790,16 +863,16 @@ class _ArrivalTile extends StatelessWidget {
 }
 
 IconData _kindIcon(TransitKind kind) => switch (kind) {
-      TransitKind.bus => Icons.directions_bus,
-      TransitKind.trolley => Icons.electric_bolt,
-      TransitKind.metro => Icons.subway,
-    };
+  TransitKind.bus => Icons.directions_bus,
+  TransitKind.trolley => Icons.electric_bolt,
+  TransitKind.metro => Icons.subway,
+};
 
 String _kindName(TransitKind kind) => switch (kind) {
-      TransitKind.bus => 'Автобус',
-      TransitKind.trolley => 'Троллейбус',
-      TransitKind.metro => 'Метро',
-    };
+  TransitKind.bus => 'Автобус',
+  TransitKind.trolley => 'Троллейбус',
+  TransitKind.metro => 'Метро',
+};
 
 String _two(int value) => value.toString().padLeft(2, '0');
 

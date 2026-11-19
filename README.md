@@ -1,17 +1,22 @@
-# freya
+# Freya (Расписание)
 
-A new Flutter project.
+Flutter-приложение: расписание колледжа, погода и транспорт (Алматы).
 
-## Getting Started
+**GitHub:** https://github.com/frayedone/freya
 
-This project is a starting point for a Flutter application.
+## Возможности
+- Расписание на неделю, редактирование пар, отмена дня, пресеты групп
+- Утренние сводки и напоминания о следующей паре (локальные уведомления)
+- Погода (Open-Meteo) и подсказки к выходу
+- Транспорт: прибытия у остановок рядом с колледжем и построение маршрута
+- Проверка обновлений и установка APK (Android)
 
-A few resources to get you started if this is your first Flutter project:
+## Стек
+- Flutter / Dart
+- `shared_preferences`, `flutter_local_notifications`, `http`, `package_info_plus`
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Запуск
+```bash
+flutter pub get
+flutter run
+```

@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 
 import '../services/notification_router.dart';
@@ -79,7 +80,9 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         children: [
           if (update != null) _buildUpdateBanner(update),
-          Expanded(child: IndexedStack(index: _index, children: _screens)),
+          Expanded(
+            child: IndexedStack(index: _index, children: _screens),
+          ),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -112,41 +115,51 @@ class _HomeScreenState extends State<HomeScreen> {
       color: context.colors.accentSoft,
       child: InkWell(
         onTap: () => UpdateDialog.show(context, update),
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.system_update_alt_rounded,
-                  color: context.colors.accent,
-                  size: 20,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Доступно обновление Freya ${update.versionName}',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                      color: context.colors.text,
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: context.colors.accent.withValues(alpha: 0.35),
+              ),
+            ),
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.system_update_alt_rounded,
+                    color: context.colors.accent,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'ОБНОВЛЕНИЕ ${update.versionName}',
+                      style: TextStyle(
+                        fontFamily: kDisplayFont,
+                        fontSize: 14,
+                        letterSpacing: 1.0,
+                        color: context.colors.text,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: context.colors.accent,
-                    foregroundColor: context.colors.bg,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    minimumSize: const Size(0, 36),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: context.colors.accent,
+                      foregroundColor: context.colors.bg,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      minimumSize: const Size(0, 36),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: () => UpdateDialog.show(context, update),
+                    child: const Text('Обновить'),
                   ),
-                  onPressed: () => UpdateDialog.show(context, update),
-                  child: const Text('Обновить'),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

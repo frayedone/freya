@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 
 import '../services/update_service.dart';
@@ -46,7 +47,10 @@ class UpdateDialog {
             child: Text('Позже'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: context.colors.accent, foregroundColor: context.colors.bg),
+            style: FilledButton.styleFrom(
+              backgroundColor: context.colors.accent,
+              foregroundColor: context.colors.bg,
+            ),
             onPressed: () => Navigator.of(context).pop(true),
             child: Text('Обновить'),
           ),
@@ -155,33 +159,30 @@ class _UpdateFlowState extends State<_UpdateFlow> {
         actions: switch (_state) {
           _FlowState.downloading => const [],
           _FlowState.ready => [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('Позже'),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Позже'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: context.colors.accent,
+                foregroundColor: context.colors.bg,
               ),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: context.colors.accent,
-                  foregroundColor: context.colors.bg,
-                ),
-                onPressed: _isAndroid ? _install : null,
-                child: Text('Установить'),
-              ),
-            ],
+              onPressed: _isAndroid ? _install : null,
+              child: Text('Установить'),
+            ),
+          ],
           _FlowState.error => [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('Закрыть'),
-              ),
-              TextButton(
-                onPressed: _openManually,
-                child: Text('Скачать вручную'),
-              ),
-              TextButton(
-                onPressed: _download,
-                child: Text('Повторить'),
-              ),
-            ],
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Закрыть'),
+            ),
+            TextButton(
+              onPressed: _openManually,
+              child: Text('Скачать вручную'),
+            ),
+            TextButton(onPressed: _download, child: Text('Повторить')),
+          ],
         },
       ),
     );
@@ -220,7 +221,11 @@ class _UpdateFlowState extends State<_UpdateFlow> {
       children: [
         Text(
           'Готово. Нажми «Установить», чтобы запустить системный установщик.',
-          style: TextStyle(fontSize: 13, height: 1.45, color: context.colors.text),
+          style: TextStyle(
+            fontSize: 13,
+            height: 1.45,
+            color: context.colors.text,
+          ),
         ),
         SizedBox(height: 6),
         Text(
@@ -244,7 +249,11 @@ class _UpdateFlowState extends State<_UpdateFlow> {
         SizedBox(height: 8),
         Text(
           _error ?? 'Неизвестная ошибка',
-          style: TextStyle(fontSize: 12.5, height: 1.4, color: context.colors.text),
+          style: TextStyle(
+            fontSize: 12.5,
+            height: 1.4,
+            color: context.colors.text,
+          ),
         ),
       ],
     );

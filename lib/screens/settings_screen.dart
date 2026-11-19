@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 
@@ -117,17 +118,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final ok = await NotificationService.instance.canScheduleExact();
     if (!mounted) return;
     setState(() => _exactAlarms = ok);
-    _showMessage(granted || ok
-        ? 'Точные будильники включены — уведомления будут приходить вовремя'
-        : 'Разрешение не выдано — система может задерживать уведомления');
+    _showMessage(
+      granted || ok
+          ? 'Точные будильники включены — уведомления будут приходить вовремя'
+          : 'Разрешение не выдано — система может задерживать уведомления',
+    );
   }
 
   Future<void> _testNotification() async {
     final ok = await NotificationService.instance.sendTestNotification();
     if (!mounted) return;
-    _showMessage(ok
-        ? 'Проверочное уведомление придёт через 15 секунд'
-        : 'Не удалось поставить уведомление — проверь разрешения');
+    _showMessage(
+      ok
+          ? 'Проверочное уведомление придёт через 15 секунд'
+          : 'Не удалось поставить уведомление — проверь разрешения',
+    );
   }
 
   void _openEditor() {
@@ -141,8 +146,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (value) {
       final schedule = await ScheduleService().load();
       final skipped = await SettingsService.loadSkippedWeekdays();
-      final ok = await NotificationService.instance
-          .enableDailyAgenda(schedule, skipped);
+      final ok = await NotificationService.instance.enableDailyAgenda(
+        schedule,
+        skipped,
+      );
       if (!mounted) return;
       if (!ok) {
         _showMessage('Не удалось включить уведомления — разреши их для Freya');
@@ -173,7 +180,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Future<void> _reset() async {    final confirmed = await showDialog<bool>(
+  Future<void> _reset() async {
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Сбросить настройки?'),
@@ -187,7 +195,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Сбросить', style: TextStyle(color: context.colors.danger)),
+            child: Text(
+              'Сбросить',
+              style: TextStyle(color: context.colors.danger),
+            ),
           ),
         ],
       ),
@@ -208,7 +219,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _showMessage('Настройки сброшены');
   }
 
-  void _showAbout() {    showDialog<void>(
+  void _showAbout() {
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Freya'),
@@ -289,15 +301,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SwitchListTile(
             activeThumbColor: context.colors.accent,
             activeTrackColor: context.colors.accentSoft,
-            title: Text('Утреннее расписание в 9:00', style: TextStyle(fontWeight: FontWeight.w700)),
-            subtitle: Text('Список пар на день каждое утро', style: TextStyle(color: context.colors.muted, fontSize: 12.5)),
+            title: Text(
+              'Утреннее расписание в 9:00',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+            subtitle: Text(
+              'Список пар на день каждое утро',
+              style: TextStyle(color: context.colors.muted, fontSize: 12.5),
+            ),
             value: _agendaEnabled,
             onChanged: _toggleAgenda,
           ),
           SwitchListTile(
             activeThumbColor: context.colors.accent,
             activeTrackColor: context.colors.accentSoft,
-            title: Text('Напомнить о ближайшей паре', style: TextStyle(fontWeight: FontWeight.w700)),
+            title: Text(
+              'Напомнить о ближайшей паре',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
             subtitle: Text(
               'Напоминание включится само за 10 минут до следующей пары',
               style: TextStyle(color: context.colors.muted, fontSize: 12.5),
@@ -306,8 +327,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: _toggleAutoNext,
           ),
           ListTile(
-            leading: Icon(Icons.alarm_add_outlined, color: context.colors.muted),
-            title: Text('Напоминания о парах', style: TextStyle(fontWeight: FontWeight.w500)),
+            leading: Icon(
+              Icons.alarm_add_outlined,
+              color: context.colors.muted,
+            ),
+            title: Text(
+              'Напоминания о парах',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
             subtitle: Text(
               'Вручную — колокольчиком на карточке занятия, за 10 минут до пары',
               style: TextStyle(color: context.colors.muted, fontSize: 12.5),
@@ -322,10 +349,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 for (final choice in ThemeChoice.values)
                   ButtonSegment(
                     value: choice,
-                    label: Text(
-                      choice.label,
-                      style: TextStyle(fontSize: 12.5),
-                    ),
+                    label: Text(choice.label, style: TextStyle(fontSize: 12.5)),
                   ),
               ],
               selected: {_theme},
@@ -402,10 +426,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SectionLabel('Доставка уведомлений'),
           ListTile(
             leading: Icon(
-              _exactAlarms ? Icons.verified_outlined : Icons.warning_amber_outlined,
-              color: _exactAlarms ? context.colors.accent : context.colors.danger,
+              _exactAlarms
+                  ? Icons.verified_outlined
+                  : Icons.warning_amber_outlined,
+              color: _exactAlarms
+                  ? context.colors.accent
+                  : context.colors.danger,
             ),
-            title: Text('Точное время', style: TextStyle(fontWeight: FontWeight.w500)),
+            title: Text(
+              'Точное время',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
             subtitle: Text(
               _exactAlarms
                   ? 'Уведомления приходят вовремя, даже когда приложение закрыто'
@@ -418,15 +449,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: _exactAlarms ? null : _askExactAlarms,
           ),
           ListTile(
-            leading: Icon(Icons.notifications_active_outlined, color: context.colors.muted),
-            title: Text('Проверить уведомление', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: Text('Придёт через 15 секунд', style: TextStyle(color: context.colors.muted, fontSize: 12.5)),
+            leading: Icon(
+              Icons.notifications_active_outlined,
+              color: context.colors.muted,
+            ),
+            title: Text(
+              'Проверить уведомление',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            subtitle: Text(
+              'Придёт через 15 секунд',
+              style: TextStyle(color: context.colors.muted, fontSize: 12.5),
+            ),
             trailing: Icon(Icons.chevron_right, color: context.colors.border),
             onTap: _testNotification,
           ),
           ListTile(
-            leading: Icon(Icons.battery_saver_outlined, color: context.colors.muted),
-            title: Text('Экономия батареи', style: TextStyle(fontWeight: FontWeight.w500)),
+            leading: Icon(
+              Icons.battery_saver_outlined,
+              color: context.colors.muted,
+            ),
+            title: Text(
+              'Экономия батареи',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
             subtitle: Text(
               'Отключите оптимизацию для Freya, иначе Xiaomi и Samsung сносят отложенные уведомления',
               style: TextStyle(color: context.colors.muted, fontSize: 12.5),
@@ -438,14 +484,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SectionLabel('Приложение'),
           ListTile(
             leading: Icon(Icons.info_outline, color: context.colors.muted),
-            title: Text('О приложении', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: Text('Freya · версия $_version', style: TextStyle(color: context.colors.muted, fontSize: 12.5)),
+            title: Text(
+              'О приложении',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            subtitle: Text(
+              'Freya · версия $_version',
+              style: TextStyle(color: context.colors.muted, fontSize: 12.5),
+            ),
             trailing: Icon(Icons.chevron_right, color: context.colors.border),
             onTap: _showAbout,
           ),
           ListTile(
             leading: Icon(Icons.school_outlined, color: context.colors.muted),
-            title: Text('Моё расписание и группа', style: TextStyle(fontWeight: FontWeight.w500)),
+            title: Text(
+              'Моё расписание и группа',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
             subtitle: Text(
               _group ?? 'Загрузка…',
               style: TextStyle(color: context.colors.muted, fontSize: 12.5),
@@ -454,8 +509,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: _openEditor,
           ),
           ListTile(
-            leading: Icon(Icons.bookmarks_outlined, color: context.colors.muted),
-            title: Text('Пресеты расписания', style: TextStyle(fontWeight: FontWeight.w500)),
+            leading: Icon(
+              Icons.bookmarks_outlined,
+              color: context.colors.muted,
+            ),
+            title: Text(
+              'Пресеты расписания',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
             subtitle: Text(
               'Сохраняй наборы пар и переключайся между ними',
               style: TextStyle(color: context.colors.muted, fontSize: 12.5),
@@ -464,8 +525,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: _openPresets,
           ),
           ListTile(
-            leading: Icon(Icons.auto_awesome_outlined, color: context.colors.muted),
-            title: Text('Пройти обучение заново', style: TextStyle(fontWeight: FontWeight.w500)),
+            leading: Icon(
+              Icons.auto_awesome_outlined,
+              color: context.colors.muted,
+            ),
+            title: Text(
+              'Пройти обучение заново',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
             subtitle: Text(
               'Повторить знакомство с приложением',
               style: TextStyle(color: context.colors.muted, fontSize: 12.5),
@@ -474,26 +541,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: _replayOnboarding,
           ),
           ListTile(
-            leading: Icon(Icons.thermostat_outlined, color: context.colors.muted),
-            title: Text('Погода', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: Text('Алматы · Open-Meteo', style: TextStyle(color: context.colors.muted, fontSize: 12.5)),
-            onTap: () => _showMessage('Погода обновляется при открытии вкладки'),
+            leading: Icon(
+              Icons.thermostat_outlined,
+              color: context.colors.muted,
+            ),
+            title: Text(
+              'Погода',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            subtitle: Text(
+              'Алматы · Open-Meteo',
+              style: TextStyle(color: context.colors.muted, fontSize: 12.5),
+            ),
+            onTap: () =>
+                _showMessage('Погода обновляется при открытии вкладки'),
           ),
           ListTile(
             leading: Icon(Icons.help_outline, color: context.colors.muted),
-            title: Text('Как включить уведомления', style: TextStyle(fontWeight: FontWeight.w500)),
+            title: Text(
+              'Как включить уведомления',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
             trailing: Icon(Icons.chevron_right, color: context.colors.border),
             onTap: _showNotificationsHelp,
           ),
           ListTile(
-            leading: Icon(Icons.system_update_alt_outlined, color: context.colors.muted),
-            title: Text('Проверить обновления', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: Text('Новая версия: скачать и установить', style: TextStyle(color: context.colors.muted, fontSize: 12.5)),
+            leading: Icon(
+              Icons.system_update_alt_outlined,
+              color: context.colors.muted,
+            ),
+            title: Text(
+              'Проверить обновления',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            subtitle: Text(
+              'Новая версия: скачать и установить',
+              style: TextStyle(color: context.colors.muted, fontSize: 12.5),
+            ),
             trailing: _checkForUpdatesBusy
                 ? SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.accent),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: context.colors.accent,
+                    ),
                   )
                 : Icon(Icons.chevron_right, color: context.colors.border),
             onTap: _checkForUpdates,
@@ -501,7 +593,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Divider(),
           ListTile(
             leading: Icon(Icons.delete_outline, color: context.colors.danger),
-            title: Text('Сбросить настройки', style: TextStyle(fontWeight: FontWeight.w500, color: context.colors.danger)),
+            title: Text(
+              'Сбросить настройки',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: context.colors.danger,
+              ),
+            ),
             onTap: _reset,
           ),
           SizedBox(height: 12),

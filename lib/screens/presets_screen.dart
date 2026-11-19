@@ -108,7 +108,8 @@ class _PresetsScreenState extends State<PresetsScreen> {
   Future<void> _overwrite(SchedulePreset preset) async {
     final confirmed = await _confirm(
       title: 'Обновить «${preset.name}»?',
-      body: 'В пресет будет записано текущее расписание. Прежние пары пресета '
+      body:
+          'В пресет будет записано текущее расписание. Прежние пары пресета '
           'будут потеряны.',
       action: 'Обновить',
     );
@@ -178,7 +179,9 @@ class _PresetsScreenState extends State<PresetsScreen> {
         ],
       ),
       body: _loading
-          ? Center(child: CircularProgressIndicator(color: context.colors.accent))
+          ? Center(
+              child: CircularProgressIndicator(color: context.colors.accent),
+            )
           : ListView(
               padding: EdgeInsets.fromLTRB(16, 8, 16, 24),
               children: [
@@ -265,7 +268,9 @@ class _PresetTile extends StatelessWidget {
                 height: 42,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: active ? context.colors.accentSoft : context.colors.cardRaised,
+                  color: active
+                      ? context.colors.accentSoft
+                      : context.colors.cardRaised,
                   borderRadius: BorderRadius.circular(11),
                 ),
                 child: Icon(
@@ -296,7 +301,10 @@ class _PresetTile extends StatelessWidget {
                         if (active) ...[
                           SizedBox(width: 8),
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: context.colors.accentSoft,
                               borderRadius: BorderRadius.circular(6),
@@ -317,14 +325,21 @@ class _PresetTile extends StatelessWidget {
                     SizedBox(height: 3),
                     Text(
                       'Группа ${preset.group} · пар: ${preset.lessonCount}',
-                      style: TextStyle(fontSize: 11.5, color: context.colors.muted),
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: context.colors.muted,
+                      ),
                     ),
                   ],
                 ),
               ),
               PopupMenuButton<String>(
                 color: context.colors.cardRaised,
-                icon: Icon(Icons.more_vert, size: 20, color: context.colors.muted),
+                icon: Icon(
+                  Icons.more_vert,
+                  size: 20,
+                  color: context.colors.muted,
+                ),
                 onSelected: (value) {
                   switch (value) {
                     case 'rename':
@@ -367,13 +382,18 @@ class _Empty extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: 28),
       child: Column(
         children: [
-          Icon(Icons.bookmarks_outlined, size: 42, color: context.colors.border),
+          Icon(
+            Icons.bookmarks_outlined,
+            size: 42,
+            color: context.colors.border,
+          ),
           SizedBox(height: 10),
           Text(
-            'Пресетов пока нет',
+            'НЕТ ПРЕСЕТОВ',
             style: TextStyle(
-              fontSize: 14.5,
-              fontWeight: FontWeight.w700,
+              fontFamily: kDisplayFont,
+              fontSize: 18,
+              letterSpacing: 1.6,
               color: context.colors.muted,
             ),
           ),

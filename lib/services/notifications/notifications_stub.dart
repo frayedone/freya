@@ -17,7 +17,10 @@ class NotificationService {
 
   Future<bool> ensurePermission() async => false;
 
-  Future<bool> enableDailyAgenda(WeekSchedule schedule, Set<int> skippedWeekdays) async => false;
+  Future<bool> enableDailyAgenda(
+    WeekSchedule schedule,
+    Set<int> skippedWeekdays,
+  ) async => false;
 
   Future<void> disableDailyAgenda() async {}
 
@@ -36,8 +39,7 @@ class NotificationService {
     required DateTime onDate,
     required int lessonIndex,
     int minutesBefore = 10,
-  }) async =>
-      NotificationResult.notSupported;
+  }) async => NotificationResult.notSupported;
 
   Future<void> cancelPreLesson(DateTime day, int lessonIndex) async {}
 

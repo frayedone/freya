@@ -30,8 +30,10 @@ class TransportService {
         serviceStart: (json['serviceStart'] as num?)?.toInt() ?? 360,
         serviceEnd: (json['serviceEnd'] as num?)?.toInt() ?? 1380,
         stops: (json['stops'] as List? ?? const [])
-            .map((item) =>
-                TransitStop.fromJson(item as Map<String, dynamic>, byNumber))
+            .map(
+              (item) =>
+                  TransitStop.fromJson(item as Map<String, dynamic>, byNumber),
+            )
             .toList(),
       );
     } catch (_) {
@@ -60,7 +62,8 @@ class TransportService {
             .toList(),
         serviceStart: (json['serviceStart'] as num?)?.toInt() ?? 360,
         serviceEnd: (json['serviceEnd'] as num?)?.toInt() ?? 1380,
-        note: network['note'] as String? ??
+        note:
+            network['note'] as String? ??
             json['networkNote'] as String? ??
             json['note'] as String? ??
             '',

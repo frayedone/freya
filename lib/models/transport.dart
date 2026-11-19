@@ -5,16 +5,16 @@ enum TransitKind {
   metro;
 
   static TransitKind fromString(String value) => switch (value) {
-        'trolley' => TransitKind.trolley,
-        'metro' => TransitKind.metro,
-        _ => TransitKind.bus,
-      };
+    'trolley' => TransitKind.trolley,
+    'metro' => TransitKind.metro,
+    _ => TransitKind.bus,
+  };
 
   String get label => switch (this) {
-        TransitKind.bus => 'автобус',
-        TransitKind.trolley => 'троллейбус',
-        TransitKind.metro => 'метро',
-      };
+    TransitKind.bus => 'автобус',
+    TransitKind.trolley => 'троллейбус',
+    TransitKind.metro => 'метро',
+  };
 }
 
 /// Маршрут: номер, вид и типичный интервал движения (в минутах).
@@ -32,10 +32,10 @@ class TransitRoute {
   final int interval;
 
   factory TransitRoute.fromJson(Map<String, dynamic> json) => TransitRoute(
-        number: json['number'] as String,
-        kind: TransitKind.fromString(json['type'] as String? ?? 'bus'),
-        interval: (json['interval'] as num).toInt(),
-      );
+    number: json['number'] as String,
+    kind: TransitKind.fromString(json['type'] as String? ?? 'bus'),
+    interval: (json['interval'] as num).toInt(),
+  );
 }
 
 /// Остановка рядом с колледжем: название, расстояние пешком и маршруты.
@@ -57,15 +57,14 @@ class TransitStop {
   factory TransitStop.fromJson(
     Map<String, dynamic> json,
     Map<String, TransitRoute> byNumber,
-  ) =>
-      TransitStop(
-        name: json['name'] as String,
-        distMeters: (json['dist'] as num).toInt(),
-        routes: (json['routes'] as List? ?? const [])
-            .map((number) => byNumber[number as String])
-            .whereType<TransitRoute>()
-            .toList(),
-      );
+  ) => TransitStop(
+    name: json['name'] as String,
+    distMeters: (json['dist'] as num).toInt(),
+    routes: (json['routes'] as List? ?? const [])
+        .map((number) => byNumber[number as String])
+        .whereType<TransitRoute>()
+        .toList(),
+  );
 }
 
 /// Данные транспорта: заголовок, период движения и остановки.

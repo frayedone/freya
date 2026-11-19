@@ -40,8 +40,7 @@ class Itinerary {
   int get totalMinutes =>
       legs.fold(0, (sum, leg) => sum + leg.rideMinutes + leg.waitMinutes);
 
-  int get stopsCount =>
-      legs.fold(0, (sum, leg) => sum + leg.stopsCount);
+  int get stopsCount => legs.fold(0, (sum, leg) => sum + leg.stopsCount);
 }
 
 /// Подбор маршрута по демо-сети: прямые поездки и варианты с 1–2 пересадками.
@@ -86,7 +85,8 @@ class TransitRouter {
     for (final first in lines) {
       if (!first.contains(originId)) continue;
       for (final second in lines) {
-        if (identical(second, first) || !second.contains(destinationId)) continue;
+        if (identical(second, first) || !second.contains(destinationId))
+          continue;
         for (final stop in first.sharedStops(second)) {
           if (first.hasPath(originId, stop) &&
               second.hasPath(stop, destinationId)) {
@@ -111,7 +111,10 @@ class TransitRouter {
             for (final secondTransfer in second.sharedStops(third)) {
               if (second.hasPath(firstTransfer, secondTransfer) &&
                   third.hasPath(secondTransfer, destinationId)) {
-                consider([first, second, third], [firstTransfer, secondTransfer]);
+                consider(
+                  [first, second, third],
+                  [firstTransfer, secondTransfer],
+                );
               }
             }
           }
@@ -142,7 +145,8 @@ class TransitRouter {
       final toId = points[i + 1];
       final from = byId[fromId];
       final to = byId[toId];
-      if (from == null || to == null || !line.hasPath(fromId, toId)) return null;
+      if (from == null || to == null || !line.hasPath(fromId, toId))
+        return null;
 
       final stopIds = line.segment(fromId, toId);
       final stops = stopIds.map((id) => byId[id]).whereType<NetStop>().toList();
@@ -172,7 +176,8 @@ class TransitRouter {
 
     return Itinerary(
       legs: legs,
-      signature: '${chain.map((l) => l.number).join('>')}'
+      signature:
+          '${chain.map((l) => l.number).join('>')}'
           '|${transferStops.join('>')}',
     );
   }
@@ -180,7 +185,8 @@ class TransitRouter {
   /// Сколько минут до ближайшего транспорта линии (оценка по интервалу).
   int _waitFor(int interval, TransitNetwork network, DateTime now) {
     final minuteOfDay = now.hour * 60 + now.minute;
-    if (minuteOfDay < network.serviceStart || minuteOfDay > network.serviceEnd) {
+    if (minuteOfDay < network.serviceStart ||
+        minuteOfDay > network.serviceEnd) {
       return interval;
     }
     final elapsed = minuteOfDay - network.serviceStart;

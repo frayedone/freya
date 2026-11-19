@@ -17,18 +17,19 @@ class NetStop {
   final double lng;
 
   factory NetStop.fromJson(Map<String, dynamic> json) => NetStop(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        lat: (json['lat'] as num).toDouble(),
-        lng: (json['lng'] as num).toDouble(),
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    lat: (json['lat'] as num).toDouble(),
+    lng: (json['lng'] as num).toDouble(),
+  );
 
   /// Расстояние до другой остановки, метров (формула гаверсинуса).
   double distanceTo(NetStop other) {
     const earthRadius = 6371000.0;
     final dLat = _rad(other.lat - lat);
     final dLng = _rad(other.lng - lng);
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(_rad(lat)) *
             math.cos(_rad(other.lat)) *
             math.sin(dLng / 2) *
@@ -54,13 +55,13 @@ class TransitLine {
   final List<String> stopIds;
 
   factory TransitLine.fromJson(Map<String, dynamic> json) => TransitLine(
-        number: json['number'] as String,
-        kind: TransitKind.fromString(json['type'] as String? ?? 'bus'),
-        interval: (json['interval'] as num).toInt(),
-        stopIds: (json['stops'] as List? ?? const [])
-            .map((value) => value as String)
-            .toList(),
-      );
+    number: json['number'] as String,
+    kind: TransitKind.fromString(json['type'] as String? ?? 'bus'),
+    interval: (json['interval'] as num).toInt(),
+    stopIds: (json['stops'] as List? ?? const [])
+        .map((value) => value as String)
+        .toList(),
+  );
 
   bool contains(String stopId) => stopIds.contains(stopId);
 

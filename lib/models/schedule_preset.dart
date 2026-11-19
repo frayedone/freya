@@ -20,23 +20,22 @@ class SchedulePreset {
   int get lessonCount =>
       schedule.days.values.fold(0, (sum, lessons) => sum + lessons.length);
 
-  SchedulePreset copyWith({String? name, WeekSchedule? schedule}) => SchedulePreset(
+  SchedulePreset copyWith({String? name, WeekSchedule? schedule}) =>
+      SchedulePreset(
         id: id,
         name: name ?? this.name,
         schedule: schedule ?? this.schedule,
       );
 
   factory SchedulePreset.fromJson(Map<String, dynamic> json) => SchedulePreset(
-        id: json['id'] as String,
-        name: json['name'] as String? ?? 'Пресет',
-        schedule: WeekSchedule.fromJson(
-          json['schedule'] as Map<String, dynamic>,
-        ),
-      );
+    id: json['id'] as String,
+    name: json['name'] as String? ?? 'Пресет',
+    schedule: WeekSchedule.fromJson(json['schedule'] as Map<String, dynamic>),
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'schedule': schedule.toJson(),
-      };
+    'id': id,
+    'name': name,
+    'schedule': schedule.toJson(),
+  };
 }

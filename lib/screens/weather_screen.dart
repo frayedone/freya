@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/weather_data.dart';
 import '../services/weather_service.dart';
+import '../theme.dart';
 import '../utils/wmo.dart';
 
 class WeatherScreen extends StatefulWidget {
@@ -30,7 +31,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
       appBar: AppBar(
         title: const Text('Погода'),
         actions: [
-          IconButton(tooltip: 'Обновить', icon: const Icon(Icons.refresh), onPressed: _reload),
+          IconButton(
+            tooltip: 'Обновить',
+            icon: const Icon(Icons.refresh),
+            onPressed: _reload,
+          ),
         ],
       ),
       body: FutureBuilder<WeatherData>(
@@ -40,7 +45,10 @@ class _WeatherScreenState extends State<WeatherScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return _ErrorView(error: snapshot.error.toString(), onRetry: _reload);
+            return _ErrorView(
+              error: snapshot.error.toString(),
+              onRetry: _reload,
+            );
           }
           final data = snapshot.data!;
           return RefreshIndicator(
@@ -53,13 +61,16 @@ class _WeatherScreenState extends State<WeatherScreen> {
                 const SizedBox(height: 20),
                 Row(
                   children: [
-                    Text('На неделю', style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      'На неделю',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     const Spacer(),
                     Text(
                       'Алматы',
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -83,14 +94,21 @@ class _HeroCard extends StatelessWidget {
   final CurrentWeather current;
 
   static List<Color> _backdrop(int code) {
-    if (code == 0) return const [Color(0xFF0D47A1), Color(0xFF1976D2)];
-    if (code == 1 || code == 2) return const [Color(0xFF283593), Color(0xFF3949AB)];
-    if (code == 3) return const [Color(0xFF37474F), Color(0xFF546E7A)];
-    if (code == 45 || code == 48) return const [Color(0xFF455A64), Color(0xFF607D8B)];
-    if (code >= 51 && code <= 67) return const [Color(0xFF01579B), Color(0xFF0277BD)];
-    if (code >= 71 && code <= 86) return const [Color(0xFF37474F), Color(0xFF78909C)];
-    if (code >= 95) return const [Color(0xFF4A148C), Color(0xFF6A1B9A)];
-    return const [Color(0xFF263238), Color(0xFF37474F)];
+    if (code == 0)
+      return const [Color(0xFF102A56), Color(0xFF1E6FD9), Color(0xFF4FC3F7)];
+    if (code == 1 || code == 2)
+      return const [Color(0xFF1B1F4B), Color(0xFF3949AB), Color(0xFF7C8CFF)];
+    if (code == 3)
+      return const [Color(0xFF1C242B), Color(0xFF455A64), Color(0xFF263238)];
+    if (code == 45 || code == 48)
+      return const [Color(0xFF263238), Color(0xFF546E7A), Color(0xFF37474F)];
+    if (code >= 51 && code <= 67)
+      return const [Color(0xFF062A44), Color(0xFF0277BD), Color(0xFF00ACC1)];
+    if (code >= 71 && code <= 86)
+      return const [Color(0xFF263238), Color(0xFF607D8B), Color(0xFFB0BEC5)];
+    if (code >= 95)
+      return const [Color(0xFF1A0836), Color(0xFF6A1B9A), Color(0xFFB71C1C)];
+    return const [Color(0xFF101418), Color(0xFF263238), Color(0xFF37474F)];
   }
 
   @override
@@ -121,10 +139,11 @@ class _HeroCard extends StatelessWidget {
                   Text(
                     '${current.temperature.toStringAsFixed(0)}°',
                     style: const TextStyle(
-                      fontSize: 66,
-                      height: 1.0,
+                      fontFamily: kDisplayFont,
+                      fontSize: 72,
+                      height: 0.95,
                       color: Colors.white,
-                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.0,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -170,7 +189,10 @@ class _HeroCard extends StatelessWidget {
                 SizedBox(width: 5),
                 Text(
                   'Алматы',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -202,7 +224,11 @@ class _StatChip extends StatelessWidget {
           const SizedBox(width: 5),
           Text(
             label,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
           ),
         ],
       ),
@@ -215,7 +241,15 @@ class _ForecastTile extends StatelessWidget {
 
   final ForecastDay day;
 
-  static const List<String> _weekday = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  static const List<String> _weekday = [
+    'Пн',
+    'Вт',
+    'Ср',
+    'Чт',
+    'Пт',
+    'Сб',
+    'Вс',
+  ];
   static const List<String> _monthGen = [
     'янв',
     'фев',
@@ -246,16 +280,13 @@ class _ForecastTile extends StatelessWidget {
               children: [
                 Text(
                   _weekday[day.date.weekday - 1],
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
+                  style: Theme.of(context).textTheme.titleSmall
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 Text(
                   '${day.date.day} ${_monthGen[day.date.month - 1]}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: colors.onSurfaceVariant),
                 ),
               ],
             ),
@@ -271,21 +302,22 @@ class _ForecastTile extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
+                  style: Theme.of(context).textTheme.bodyMedium
                       ?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 if (day.precipitationProbability > 0)
                   Row(
                     children: [
-                      Icon(Icons.water_drop_outlined, size: 14, color: colors.primary),
+                      Icon(
+                        Icons.water_drop_outlined,
+                        size: 14,
+                        color: colors.primary,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '${day.precipitationProbability}% осадков',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: colors.onSurfaceVariant,
-                            ),
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(color: colors.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -295,16 +327,13 @@ class _ForecastTile extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '${day.min.toStringAsFixed(0)}°',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: colors.onSurfaceVariant,
-                ),
+            style: Theme.of(context).textTheme.bodyLarge
+                ?.copyWith(color: colors.onSurfaceVariant),
           ),
           const SizedBox(width: 6),
           Text(
             '${day.max.toStringAsFixed(0)}°',
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
+            style: Theme.of(context).textTheme.titleMedium
                 ?.copyWith(fontWeight: FontWeight.w800),
           ),
         ],
